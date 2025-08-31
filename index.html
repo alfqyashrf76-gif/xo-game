@@ -3,308 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لعبة XO أونلاين - بواسطة مانوس</title>
+    <title>لعبة XO المطورة - بواسطة مانوس</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* --- نفس أكواد CSS السابقة بالكامل --- */
         :root {
-            --bg-color: #1a1a1a;
-            --panel-bg: #2c2c2c;
-            --primary: #00aaff;
-            --secondary: #ff4444;
-            --text-color: #f0f0f0;
-            --muted-color: #888;
-            --border-color: #444;
-            --cell-bg: #333;
-            --cell-hover: #444;
-            --success: #4caf50;
-            --warning: #ff9800;
+            --bg-color: #1a1a1a; --panel-bg: #2c2c2c; --primary: #00aaff; --secondary: #ff4444; --text-color: #f0f0f0; --muted-color: #888; --border-color: #444; --cell-bg: #333; --cell-hover: #444; --success: #4caf50; --warning: #ff9800;
         }
-        body {
-            font-family: 'Cairo', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 10px;
-            box-sizing: border-box;
-        }
-        .app {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            width: 100%;
-            max-width: 1000px;
-        }
-        .panel {
-            background-color: var(--panel-bg);
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            transition: transform 0.3s ease;
-        }
-        .panel:hover {
-            transform: translateY(-5px);
-        }
-        .controls {
-            flex: 1;
-            min-width: 280px;
-        }
-        .game-area {
-            flex: 2;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-width: 320px;
-        }
-        h2, h3 {
-            color: var(--text-color);
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 10px;
-            margin-top: 0;
-        }
-        .section { 
-            margin-bottom: 20px; 
-        }
-        .row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
+        body { font-family: 'Cairo', sans-serif; background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 10px; box-sizing: border-box; }
+        .app { display: flex; flex-wrap: wrap; gap: 20px; width: 100%; max-width: 1200px; }
+        .panel { background-color: var(--panel-bg); border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: transform 0.3s ease; }
+        .panel:hover { transform: translateY(-5px); }
+        .controls { flex: 1; min-width: 300px; }
+        .game-area { flex: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 340px; }
+        h2, h3 { color: var(--text-color); border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-top: 0; }
+        .section { margin-bottom: 20px; }
+        .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 10px; }
         label, .muted { color: var(--muted-color); }
         .tiny { font-size: 0.8em; color: var(--muted-color); }
-        select, input[type="text"], button {
-            width: 100%;
-            padding: 10px;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-            background-color: var(--cell-bg);
-            color: var(--text-color);
-            font-family: 'Cairo', sans-serif;
-            box-sizing: border-box;
-        }
-        button {
-            background-color: var(--primary);
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s;
-            position: relative;
-            overflow: hidden;
-        }
-        button:hover { 
-            background-color: #0088cc; 
-            transform: translateY(-2px);
-        }
-        button:active {
-            transform: translateY(1px);
-        }
+        select, input[type="text"], button { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border-color); background-color: var(--cell-bg); color: var(--text-color); font-family: 'Cairo', sans-serif; box-sizing: border-box; }
+        button { background-color: var(--primary); border: none; cursor: pointer; font-weight: bold; transition: all 0.3s; position: relative; overflow: hidden; }
+        button:hover { background-color: #0088cc; transform: translateY(-2px); }
+        button:active { transform: translateY(1px); }
         button.secondary { background-color: var(--secondary); }
         button.secondary:hover { background-color: #cc3333; }
         button.success { background-color: var(--success); }
         button.success:hover { background-color: #3d8b40; }
-        #onlineSection { 
-            display: none; 
-            animation: fadeIn 0.5s ease;
-        }
-        .status { 
-            font-size: 0.9em; 
-            padding: 8px;
-            border-radius: 4px;
-            background-color: rgba(0,0,0,0.2);
-            width: 100%;
-            text-align: center;
-        }
-        .status.connected {
-            color: var(--success);
-            background-color: rgba(76, 175, 80, 0.2);
-        }
-        .status.connecting {
-            color: var(--warning);
-            background-color: rgba(255, 152, 0, 0.2);
-        }
-        .status.error {
-            color: var(--secondary);
-            background-color: rgba(255, 68, 68, 0.2);
-        }
-        .peer-id-display {
-            font-weight: bold;
-            user-select: all;
-            cursor: pointer;
-            color: var(--primary);
-            background: var(--bg-color);
-            padding: 8px;
-            border-radius: 4px;
-            text-align: center;
-            transition: all 0.3s;
-            position: relative;
-            width: 100%;
-        }
-        .peer-id-display:hover {
-            background: #252525;
-        }
-        .peer-id-display:after {
-            content: "نسخ";
-            position: absolute;
-            left: 5px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 0.7em;
-            color: var(--muted-color);
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-        .peer-id-display:hover:after {
-            opacity: 1;
-        }
-        #gameBoard {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(80px, 100px));
-            grid-template-rows: repeat(3, minmax(80px, 100px));
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        .cell {
-            width: 100%;
-            height: 100%;
-            background-color: var(--cell-bg);
-            border-radius: 8px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 3em;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-            position: relative;
-        }
-        .cell:hover { 
-            background-color: var(--cell-hover); 
-            transform: scale(1.03);
-        }
-        .cell.x { 
-            color: var(--primary); 
-            animation: appear 0.3s ease;
-        }
-        .cell.o { 
-            color: var(--secondary); 
-            animation: appear 0.3s ease;
-        }
-        .cell.win { 
-            background-color: #ffd700; 
-            color: #1a1a1a;
-            animation: pulse 1s infinite;
-        }
-        #gameStatus {
-            font-size: 1.2em;
-            min-height: 40px;
-            color: var(--text-color);
-            text-align: center;
-            margin-bottom: 15px;
-            padding: 8px 15px;
-            border-radius: 20px;
-            background-color: rgba(0,0,0,0.2);
-            transition: all 0.3s;
-        }
-        .board-locked { 
-            pointer-events: none; 
-            opacity: 0.7; 
-        }
-        .score-board {
-            display: flex;
-            justify-content: space-around;
-            width: 100%;
-            margin-top: 20px;
-            background-color: rgba(0,0,0,0.2);
-            border-radius: 10px;
-            padding: 10px;
-        }
-        .score-item {
-            text-align: center;
-        }
-        .score-value {
-            font-size: 1.5em;
-            font-weight: bold;
-            color: var(--primary);
-        }
-        .score-item:last-of-type .score-value {
-            color: var(--secondary);
-        }
-        .connection-quality {
-            width: 100%;
-            height: 5px;
-            border-radius: 3px;
-            background-color: var(--muted-color);
-            margin-top: 5px;
-            position: relative;
-            overflow: hidden;
-        }
-        .quality-indicator {
-            height: 100%;
-            width: 100%;
-            background-color: var(--success);
-            transition: width 0.5s, background-color 0.5s;
-        }
-        .confetti-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            overflow: hidden;
-            z-index: 9999;
-        }
-        .confetti {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background-color: #f00;
-            opacity: 0.7;
-            animation: fall 3s linear forwards;
-        }
-        .role-selector {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-            width: 100%;
-        }
-        .role-btn {
-            flex: 1;
-            padding: 8px;
-            text-align: center;
-            border-radius: 6px;
-            cursor: pointer;
-            background-color: var(--cell-bg);
-            transition: all 0.3s;
-        }
-        .role-btn.active {
-            background-color: var(--primary);
-            color: white;
-        }
-        .role-btn:hover:not(.active) {
-            background-color: var(--cell-hover);
-        }
-        @keyframes fall {
-            to {
-                transform: translateY(100vh) rotate(360deg);
-                opacity: 0;
-            }
-        }
+        #onlineSection, #chatSection { display: none; animation: fadeIn 0.5s ease; }
+        .status { font-size: 0.9em; padding: 8px; border-radius: 4px; background-color: rgba(0,0,0,0.2); width: 100%; text-align: center; }
+        .status.connected { color: var(--success); background-color: rgba(76, 175, 80, 0.2); }
+        .status.error { color: var(--secondary); background-color: rgba(255, 68, 68, 0.2); }
+        .peer-id-display { font-weight: bold; user-select: all; cursor: pointer; color: var(--primary); background: var(--bg-color); padding: 8px; border-radius: 4px; text-align: center; transition: all 0.3s; position: relative; width: 100%; }
+        #gameBoard { display: grid; grid-template-columns: repeat(3, minmax(80px, 100px)); grid-template-rows: repeat(3, minmax(80px, 100px)); gap: 10px; margin-bottom: 20px; }
+        .cell { width: 100%; height: 100%; background-color: var(--cell-bg); border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: 3em; font-weight: bold; cursor: pointer; transition: all 0.3s; }
+        .cell:hover { background-color: var(--cell-hover); transform: scale(1.03); }
+        .cell.x { color: var(--primary); animation: appear 0.3s ease; }
+        .cell.o { color: var(--secondary); animation: appear 0.3s ease; }
+        .cell.win { background-color: #ffd700; color: #1a1a1a; animation: pulse 1s infinite; }
+        #gameStatus { font-size: 1.2em; min-height: 40px; color: var(--text-color); text-align: center; margin-bottom: 15px; padding: 8px 15px; border-radius: 20px; background-color: rgba(0,0,0,0.2); transition: all 0.3s; }
+        .board-locked { pointer-events: none; opacity: 0.7; }
+        .score-board { display: flex; justify-content: space-around; width: 100%; margin-top: 20px; background-color: rgba(0,0,0,0.2); border-radius: 10px; padding: 10px; }
+        .score-item { text-align: center; }
+        .score-value { font-size: 1.5em; font-weight: bold; color: var(--primary); }
+        .score-item:last-of-type .score-value { color: var(--secondary); }
+        .connection-quality { width: 100%; height: 5px; border-radius: 3px; background-color: var(--muted-color); margin-top: 5px; position: relative; overflow: hidden; }
+        .quality-indicator { height: 100%; width: 100%; background-color: var(--success); transition: width 0.5s, background-color 0.5s; }
+        .confetti-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+        .confetti { position: absolute; width: 10px; height: 10px; opacity: 0.7; animation: fall 3s linear forwards; }
+        /* --- New Chat Styles --- */
+        #chatMessages { height: 150px; overflow-y: auto; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; margin-bottom: 10px; font-size: 0.9em; }
+        .chat-message { margin-bottom: 8px; }
+        .chat-message.me { text-align: left; color: var(--primary); }
+        .chat-message.opponent { text-align: right; color: var(--secondary); }
+        .chat-message .sender { font-weight: bold; }
+        /* --- New Modal Styles --- */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 10000; animation: fadeIn 0.3s; }
+        .modal-content { background: var(--panel-bg); padding: 30px; border-radius: 12px; text-align: center; box-shadow: 0 5px 20px rgba(0,0,0,0.4); }
+        .modal-content p { margin: 0 0 20px 0; font-size: 1.2em; }
+        .modal-buttons { display: flex; gap: 15px; justify-content: center; }
+        @keyframes fall { to { transform: translateY(100vh) rotate(360deg); opacity: 0; } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes appear { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         @keyframes pulse { 0% { box-shadow: 0 0 5px 2px #ffd700; } 50% { box-shadow: 0 0 20px 10px #ffd700; } 100% { box-shadow: 0 0 5px 2px #ffd700; } }
-        @keyframes celebrate { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
-        .celebrate { animation: celebrate 0.5s ease; }
     </style>
 </head>
 <body>
+<!-- Confetti and Modal containers -->
 <div id="confetti-container"></div>
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal-content">
+        <p id="modalText"></p>
+        <div class="modal-buttons" id="modalButtons"></div>
+    </div>
+</div>
+
 <div class="app">
     <div class="panel controls">
         <h2>إعدادات اللعبة</h2>
@@ -313,89 +86,60 @@
                 <label class="muted">وضع اللعب</label>
                 <select id="gameMode">
                     <option value="player">لاعب ضد لاعب (محلي)</option>
+                    <option value="ai">ضد الكمبيوتر</option>
                     <option value="online">أونلاين (PeerJS)</option>
                 </select>
             </div>
         </div>
 
         <div class="section" id="onlineSection">
-            <h3 class="muted">اللعب أونلاين (PeerJS)</h3>
-            <div class="row">
-                <div class="status" id="connectionStatus">جاري الحصول على معرّف...</div>
-            </div>
-            <div class="row">
-                <label class="tiny">المعرّف الخاص بك (انسخه وأرسله لصديقك):</label>
-                <div id="myPeerId" class="peer-id-display">...</div>
-            </div>
-            <div class="row">
-                <div class="connection-quality">
-                    <div class="quality-indicator" id="qualityIndicator"></div>
-                </div>
-            </div>
+            <h3 class="muted">اللعب أونلاين</h3>
+            <div class="row"><div class="status" id="connectionStatus">...</div></div>
+            <div class="row"><button id="inviteBtn"><i class="fas fa-share-alt"></i> إنشاء رابط دعوة</button></div>
             <hr>
-            <div class="row">
-                <input type="text" id="remotePeerIdInput" placeholder="الصق معرّف صديقك هنا" />
-            </div>
-            <div class="row">
-                <button id="connectBtn">اتصال بالخصم</button>
-            </div>
-            <div class="row">
-                <div class="role-selector">
-                    <div class="role-btn" data-role="X">أريد أن أكون X</div>
-                    <div class="role-btn" data-role="O">أريد أن أكون O</div>
-                </div>
-            </div>
+            <div class="row"><input type="text" id="remotePeerIdInput" placeholder="الصق معرّف أو رابط الدعوة هنا" /></div>
+            <div class="row"><button id="connectBtn">اتصال بالخصم</button></div>
         </div>
 
         <div class="section">
             <h3 class="muted">أدوات التحكم</h3>
-            <div class="row">
-                <button id="restartBtn"><i class="fas fa-redo"></i> إعادة اللعب</button>
-            </div>
-            <div class="row">
-                <button id="undoBtn" class="secondary"><i class="fas fa-undo"></i> تراجع عن حركة</button>
-            </div>
-            <div class="row">
-                <button id="newGameBtn" class="success"><i class="fas fa-plus"></i> لعبة جديدة</button>
-            </div>
+            <div class="row"><button id="restartBtn"><i class="fas fa-redo"></i> إعادة اللعب</button></div>
+            <div class="row"><button id="newGameBtn" class="success"><i class="fas fa-plus"></i> جولة جديدة</button></div>
         </div>
 
         <div class="section">
             <h3 class="muted">النتائج</h3>
             <div class="score-board">
-                <div class="score-item">
-                    <div>X</div>
-                    <div class="score-value" id="scoreX">0</div>
-                </div>
-                <div class="score-item">
-                    <div>تعادل</div>
-                    <div class="score-value" id="scoreDraw">0</div>
-                </div>
-                <div class="score-item">
-                    <div>O</div>
-                    <div class="score-value" id="scoreO">0</div>
-                </div>
+                <div class="score-item"><div>X</div><div class="score-value" id="scoreX">0</div></div>
+                <div class="score-item"><div>تعادل</div><div class="score-value" id="scoreDraw">0</div></div>
+                <div class="score-item"><div>O</div><div class="score-value" id="scoreO">0</div></div>
             </div>
         </div>
     </div>
 
     <div class="panel game-area">
-        <div id="gameStatus">ابدأ اللعبة أو اتصل بخصم</div>
+        <div id="gameStatus">اختر وضع اللعب للبدء</div>
         <div id="gameBoard"></div>
         <div id="timer" style="font-size: 1.2em; color: var(--muted-color); margin-top: 15px;">00:00</div>
+    </div>
+
+    <!-- New Chat Panel -->
+    <div class="panel" id="chatSection" style="flex-basis: 100%;">
+        <h3>الدردشة</h3>
+        <div id="chatMessages"></div>
+        <form id="chatForm" class="row">
+            <input type="text" id="chatInput" placeholder="اكتب رسالتك..." autocomplete="off" />
+            <button type="submit" style="width: auto; padding: 10px 15px;"><i class="fas fa-paper-plane"></i></button>
+        </form>
     </div>
 </div>
 
 <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
-
 <script>
-    // --- FIX: Wait for the DOM to be fully loaded before running the script ---
-    document.addEventListener('DOMContentLoaded', () => {
-
-    // --- عناصر التحكم واللعبة ---
+document.addEventListener('DOMContentLoaded', () => {
+    // --- DOM Elements ---
     const gameModeSelect = document.getElementById('gameMode');
     const restartBtn = document.getElementById('restartBtn');
-    const undoBtn = document.getElementById('undoBtn');
     const newGameBtn = document.getElementById('newGameBtn');
     const gameBoard = document.getElementById('gameBoard');
     const gameStatus = document.getElementById('gameStatus');
@@ -403,35 +147,68 @@
     const scoreX = document.getElementById('scoreX');
     const scoreDraw = document.getElementById('scoreDraw');
     const scoreO = document.getElementById('scoreO');
-    const qualityIndicator = document.getElementById('qualityIndicator');
     const confettiContainer = document.getElementById('confetti-container');
-
-    // --- عناصر قسم الأونلاين ---
     const onlineSection = document.getElementById('onlineSection');
     const connectionStatus = document.getElementById('connectionStatus');
-    const myPeerIdDisplay = document.getElementById('myPeerId');
+    const inviteBtn = document.getElementById('inviteBtn');
     const remotePeerIdInput = document.getElementById('remotePeerIdInput');
     const connectBtn = document.getElementById('connectBtn');
-    const roleButtons = document.querySelectorAll('.role-btn');
+    const chatSection = document.getElementById('chatSection');
+    const chatMessages = document.getElementById('chatMessages');
+    const chatForm = document.getElementById('chatForm');
+    const chatInput = document.getElementById('chatInput');
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalText = document.getElementById('modalText');
+    const modalButtons = document.getElementById('modalButtons');
 
-    // --- متغيرات حالة اللعبة ---
+    // --- Game State ---
     let boardState = Array(9).fill(null);
     let currentPlayer = 'X';
     let gameActive = true;
-    let history = [];
     let gameMode = 'player';
     let scores = { X: 0, O: 0, draw: 0 };
     let gameTimer = null;
     let timeElapsed = 0;
 
-    // --- متغيرات الشبكة ---
+    // --- Network State ---
     let peer = null;
     let conn = null;
-    let myRole = ''; // 'X' or 'O'
-    let desiredRole = 'X'; // الدور المفضل للمستخدم
-    let connectionPingInterval = null;
+    let myRole = '';
 
-    // --- وظائف اللعبة الأساسية ---
+    // --- Sounds ---
+    const sounds = {
+        move: new Audio('https://cdn.pixabay.com/download/audio/2021/08/04/audio_c483731958.mp3?filename=plunger-immediate-hit-155314.mp3'),
+        win: new Audio('https://cdn.pixabay.com/download/audio/2022/10/13/audio_73b1fcb72f.mp3?filename=success-fanfare-trumpets-6185.mp3'),
+        draw: new Audio('https://cdn.pixabay.com/download/audio/2022/03/10/audio_e5e39c459c.mp3?filename=negative_beeps-6008.mp3'),
+        click: new Audio('https://cdn.pixabay.com/download/audio/2022/03/15/audio_28b08a33a2.mp3?filename=mouse-click-153941.mp3')
+    };
+    function playSound(type) { if (sounds[type]) { sounds[type].currentTime = 0; sounds[type].play().catch(e => {}); } }
+
+    // --- UI & Modal Functions ---
+    function showModal(text, buttons) {
+        modalText.textContent = text;
+        modalButtons.innerHTML = '';
+        buttons.forEach(btnInfo => {
+            const button = document.createElement('button');
+            button.textContent = btnInfo.text;
+            button.className = btnInfo.class || '';
+            button.onclick = () => {
+                playSound('click');
+                btnInfo.action();
+                modalOverlay.style.display = 'none';
+            };
+            modalButtons.appendChild(button);
+        });
+        modalOverlay.style.display = 'flex';
+    }
+
+    function showTemporaryStatus(message, duration = 2000) {
+        const originalText = gameStatus.textContent;
+        gameStatus.textContent = message;
+        setTimeout(() => { gameStatus.textContent = originalText; }, duration);
+    }
+
+    // --- Game Logic ---
     function createBoard() {
         gameBoard.innerHTML = '';
         for (let i = 0; i < 9; i++) {
@@ -444,49 +221,39 @@
     }
 
     function handleCellClick(event) {
+        if (!gameActive) return;
         const index = parseInt(event.target.dataset.index, 10);
+        if (boardState[index] !== null) return;
 
-        if (!gameActive || boardState[index] !== null) {
-            return;
-        }
-
-        if (gameMode === 'online' && conn && conn.open && currentPlayer !== myRole) {
-            showTemporaryStatus("ليس دورك!", 1000, true);
+        if (gameMode === 'online' && conn?.open && currentPlayer !== myRole) {
+            showTemporaryStatus("ليس دورك!");
             return;
         }
 
         makeMove(index, currentPlayer);
 
-        if (gameMode === 'online' && conn && conn.open) {
-            sendNetworkMessage({ type: 'move', index: index, player: currentPlayer });
+        if (gameMode === 'online' && conn?.open) {
+            sendNetworkMessage({ type: 'move', index: index });
             lockBoard();
+        } else if (gameMode === 'ai' && gameActive) {
+            lockBoard();
+            setTimeout(aiMove, 500);
         }
         
-        // Toggle player only if game is still active
-        if (gameActive) {
-            togglePlayer();
-        }
+        if (gameActive) togglePlayer();
     }
 
     function makeMove(index, player) {
-        if (!gameActive || boardState[index] !== null) return;
-
-        history.push([...boardState]);
+        if (boardState[index] !== null) return;
+        playSound('move');
         boardState[index] = player;
-        const cell = document.querySelector(`.cell[data-index='${index}']`);
-        if (cell) {
-            cell.textContent = player;
-            cell.classList.add(player.toLowerCase());
-        }
+        document.querySelector(`.cell[data-index='${index}']`).textContent = player;
+        document.querySelector(`.cell[data-index='${index}']`).classList.add(player.toLowerCase());
 
         if (checkWin(player)) {
             endGame(false, player);
-            scores[player]++;
-            updateScores();
         } else if (boardState.every(cell => cell !== null)) {
             endGame(true);
-            scores.draw++;
-            updateScores();
         }
     }
 
@@ -496,312 +263,266 @@
     }
 
     function updateStatus() {
-        if (gameActive) {
-            let statusText = `الدور على اللاعب: ${currentPlayer}`;
-            if (gameMode === 'online' && conn && conn.open) {
-                statusText += (currentPlayer === myRole) ? " (أنت)" : " (الخصم)";
-            }
-            gameStatus.textContent = statusText;
+        if (!gameActive) return;
+        let statusText = `الدور على اللاعب: ${currentPlayer}`;
+        if (gameMode === 'online' && conn?.open) {
+            statusText += (currentPlayer === myRole) ? " (أنت)" : " (الخصم)";
+        } else if (gameMode === 'ai') {
+            statusText = (currentPlayer === 'X') ? "دورك للعب" : "الكمبيوتر يفكر...";
         }
+        gameStatus.textContent = statusText;
     }
 
-    function checkWin(player) {
-        const winConditions = [
-            [0, 1, 2], [3, 4, 5], [6, 7, 8],
-            [0, 3, 6], [1, 4, 7], [2, 5, 8],
-            [0, 4, 8], [2, 4, 6]
-        ];
-        const winningCombination = winConditions.find(combination => 
-            combination.every(index => boardState[index] === player)
-        );
-        if (winningCombination) {
-            winningCombination.forEach(index => {
-                document.querySelector(`.cell[data-index='${index}']`).classList.add('win');
-            });
-            return true;
+    function checkWin(player, board = boardState) {
+        const winConditions = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+        const winningCombination = winConditions.find(c => c.every(i => board[i] === player));
+        if (winningCombination && board === boardState) {
+            winningCombination.forEach(i => document.querySelector(`.cell[data-index='${i}']`).classList.add('win'));
         }
-        return false;
+        return !!winningCombination;
     }
 
     function endGame(isDraw, winner = null) {
         gameActive = false;
         clearInterval(gameTimer);
-        
         if (isDraw) {
+            playSound('draw');
             gameStatus.textContent = 'انتهت اللعبة بالتعادل!';
+            scores.draw++;
         } else {
+            playSound('win');
             gameStatus.textContent = `اللاعب ${winner} فاز!`;
-            if (gameMode !== 'online' || winner === myRole) {
-                createConfetti();
-            }
+            scores[winner]++;
+            if (gameMode !== 'online' || winner === myRole) createConfetti();
         }
-        gameStatus.classList.add('celebrate');
-        setTimeout(() => gameStatus.classList.remove('celebrate'), 1000);
+        updateScores();
     }
 
-    function startGame(isOnlineGame = false) {
+    function startGame() {
         boardState.fill(null);
-        history = [];
         gameActive = true;
         currentPlayer = 'X';
         createBoard();
-        
+        updateStatus();
         clearInterval(gameTimer);
         timeElapsed = 0;
         updateTimer();
         gameTimer = setInterval(updateTimer, 1000);
-        
-        if (isOnlineGame) {
-            // Role negotiation will set the board state
-            if (myRole === 'X') {
-                unlockBoard();
-                gameStatus.textContent = "دورك للعب (X)";
-            } else {
-                lockBoard();
-                gameStatus.textContent = "في انتظار حركة الخصم (O)";
-            }
-        } else {
-            updateStatus();
-            unlockBoard();
-        }
-    }
+        unlockBoard();
 
-    function updateTimer() {
-        timeElapsed++;
-        const minutes = Math.floor(timeElapsed / 60);
-        const seconds = timeElapsed % 60;
-        timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    }
-
-    function updateScores() {
-        scoreX.textContent = scores.X;
-        scoreO.textContent = scores.O;
-        scoreDraw.textContent = scores.draw;
-    }
-
-    function handleUndo() {
         if (gameMode === 'online') {
-            showTemporaryStatus("التراجع غير متاح في وضع الأونلاين حالياً.", 2000);
-            return;
+            chatSection.style.display = 'block';
+            if (myRole === 'X') { gameStatus.textContent = "دورك للعب (X)"; } 
+            else { lockBoard(); gameStatus.textContent = "في انتظار حركة الخصم (O)"; }
+        } else {
+            chatSection.style.display = 'none';
         }
-        performUndo();
     }
 
-    function performUndo() {
-        if (history.length > 0 && gameActive) {
-            boardState = history.pop();
-            createBoard();
-            boardState.forEach((player, index) => {
-                if (player) {
-                    const cell = document.querySelector(`.cell[data-index='${index}']`);
-                    cell.textContent = player;
-                    cell.classList.add(player.toLowerCase());
+    function updateTimer() { timeElapsed++; timerDisplay.textContent = `${Math.floor(timeElapsed/60).toString().padStart(2,'0')}:${(timeElapsed%60).toString().padStart(2,'0')}`; }
+    function updateScores() { scoreX.textContent = scores.X; scoreO.textContent = scores.O; scoreDraw.textContent = scores.draw; if (gameMode !== 'online') localStorage.setItem('xoScores', JSON.stringify(scores)); }
+    function resetScores() { scores = { X: 0, O: 0, draw: 0 }; updateScores(); }
+    function lockBoard() { gameBoard.classList.add('board-locked'); }
+    function unlockBoard() { gameBoard.classList.remove('board-locked'); }
+    function createConfetti() { for (let i = 0; i < 50; i++) { const c = document.createElement('div'); c.className = 'confetti'; c.style.left = Math.random()*100+'vw'; c.style.animationDelay = Math.random()*-3+'s'; c.style.backgroundColor = `hsl(${Math.random()*360},100%,50%)`; confettiContainer.appendChild(c); setTimeout(()=>c.remove(),3000); } }
+
+    // --- AI Logic (Minimax) ---
+    function aiMove() {
+        const bestMove = findBestMove(boardState);
+        if (bestMove !== -1) {
+            makeMove(bestMove, 'O');
+            if (gameActive) togglePlayer();
+        }
+        unlockBoard();
+    }
+
+    function findBestMove(board) {
+        let bestVal = -1000;
+        let bestMove = -1;
+        for (let i = 0; i < 9; i++) {
+            if (board[i] === null) {
+                board[i] = 'O';
+                let moveVal = minimax(board, 0, false);
+                board[i] = null;
+                if (moveVal > bestVal) {
+                    bestMove = i;
+                    bestVal = moveVal;
                 }
-            });
-            togglePlayer();
+            }
+        }
+        return bestMove;
+    }
+
+    function minimax(board, depth, isMax) {
+        const score = evaluate(board);
+        if (score === 10) return score - depth;
+        if (score === -10) return score + depth;
+        if (board.every(cell => cell !== null)) return 0;
+
+        if (isMax) {
+            let best = -1000;
+            for (let i = 0; i < 9; i++) {
+                if (board[i] === null) {
+                    board[i] = 'O';
+                    best = Math.max(best, minimax(board, depth + 1, !isMax));
+                    board[i] = null;
+                }
+            }
+            return best;
+        } else {
+            let best = 1000;
+            for (let i = 0; i < 9; i++) {
+                if (board[i] === null) {
+                    board[i] = 'X';
+                    best = Math.min(best, minimax(board, depth + 1, !isMax));
+                    board[i] = null;
+                }
+            }
+            return best;
         }
     }
 
-    function resetScores() {
-        scores = { X: 0, O: 0, draw: 0 };
-        updateScores();
+    function evaluate(b) {
+        if (checkWin('O', b)) return 10;
+        if (checkWin('X', b)) return -10;
+        return 0;
     }
 
-    function showTemporaryStatus(message, duration, isError = false) {
-        const originalText = gameStatus.textContent;
-        const originalColor = gameStatus.style.color;
-        gameStatus.textContent = message;
-        if (isError) gameStatus.style.color = 'var(--secondary)';
-        setTimeout(() => {
-            gameStatus.textContent = originalText;
-            gameStatus.style.color = originalColor;
-        }, duration);
-    }
-
-    function createConfetti() {
-        for (let i = 0; i < 50; i++) {
-            const confetti = document.createElement('div');
-            confetti.classList.add('confetti');
-            confetti.style.left = Math.random() * 100 + 'vw';
-            confetti.style.animationDelay = Math.random() * -3 + 's';
-            confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
-            confettiContainer.appendChild(confetti);
-            setTimeout(() => confetti.remove(), 3000);
-        }
-    }
-
-    // --- وظائف الشبكة و PeerJS ---
+    // --- Network & Chat Logic ---
     function handleGameModeChange() {
         gameMode = gameModeSelect.value;
+        onlineSection.style.display = (gameMode === 'online') ? 'block' : 'none';
+        chatSection.style.display = 'none';
         resetScores();
-        if (gameMode === 'online') {
-            onlineSection.style.display = 'block';
-            if (!peer || peer.destroyed) initializePeer();
-            startGame(true);
-        } else {
-            onlineSection.style.display = 'none';
+        if (gameMode !== 'online') {
             if (peer) peer.destroy();
-            if (conn) conn.close();
-            clearInterval(connectionPingInterval);
-            myRole = '';
-            startGame(false);
+            const savedScores = localStorage.getItem('xoScores');
+            if (savedScores) scores = JSON.parse(savedScores);
+            updateScores();
+        } else {
+            if (!peer || peer.destroyed) initializePeer();
         }
+        startGame();
     }
 
     function initializePeer() {
         if (peer) peer.destroy();
         peer = new Peer();
-
-        peer.on('open', id => {
-            myPeerIdDisplay.textContent = id;
-            connectionStatus.textContent = 'جاهز للاتصال';
-            connectionStatus.className = 'status connected';
-        });
-
+        peer.on('open', id => { connectionStatus.textContent = 'جاهز للاتصال'; });
         peer.on('connection', newConn => {
-            if (conn && conn.open) {
-                newConn.close();
-                return;
-            }
+            if (conn?.open) { newConn.close(); return; }
             conn = newConn;
-            myRole = 'O'; // Receiver is O by default
+            myRole = 'O';
             setupConnectionHandlers();
         });
-
-        peer.on('error', err => {
-            connectionStatus.textContent = `خطأ: ${err.type}`;
-            connectionStatus.className = 'status error';
-        });
-        
-        peer.on('disconnected', () => {
-            connectionStatus.textContent = 'انقطع الاتصال بالخادم';
-            connectionStatus.className = 'status error';
-            // Attempt to reconnect
-            if (!peer.destroyed) {
-                peer.reconnect();
-            }
-        });
+        peer.on('error', err => { connectionStatus.textContent = `خطأ: ${err.type}`; });
     }
 
     function connectToPeer() {
-        const remoteId = remotePeerIdInput.value.trim();
-        if (!remoteId) { alert('الرجاء إدخال معرّف الخصم.'); return; }
-        if (conn && conn.open) { alert("أنت متصل بالفعل."); return; }
-
+        let remoteId = remotePeerIdInput.value.trim();
+        try { const url = new URL(remoteId); remoteId = url.searchParams.get('join'); } catch (e) {}
+        if (!remoteId) { showModal("الرجاء إدخال معرّف أو رابط دعوة صحيح.", [{ text: "موافق", action: () => {} }]); return; }
         conn = peer.connect(remoteId, { reliable: true });
-        myRole = 'X'; // Initiator is X
+        myRole = 'X';
         setupConnectionHandlers();
     }
 
     function setupConnectionHandlers() {
         conn.on('open', () => {
             connectionStatus.textContent = `متصل باللاعب`;
-            connectionStatus.className = 'status connected';
             remotePeerIdInput.disabled = true;
             connectBtn.disabled = true;
             resetScores();
-            startGame(true);
-            startConnectionQualityCheck();
+            startGame();
         });
-
         conn.on('data', handleNetworkMessage);
-
         conn.on('close', () => {
-            connectionStatus.textContent = 'انقطع الاتصال بالخصم';
-            connectionStatus.className = 'status error';
-            remotePeerIdInput.disabled = false;
-            connectBtn.disabled = false;
-            conn = null;
-            clearInterval(connectionPingInterval);
-            handleGameModeChange(); // Reset to initial state
+            showModal("انقطع الاتصال بالخصم.", [{ text: "موافق", action: () => { handleGameModeChange(); } }]);
         });
     }
 
-    function startConnectionQualityCheck() {
-        clearInterval(connectionPingInterval);
-        connectionPingInterval = setInterval(() => {
-            if (conn && conn.open) {
-                sendNetworkMessage({ type: 'ping', time: Date.now() });
-            }
-        }, 3000);
-    }
-
-    function updateConnectionQuality(pingTime) {
-        const latency = Date.now() - pingTime;
-        let quality = Math.max(0, 100 - (latency / 5)); // 100% at 0ms, 0% at 500ms
-        qualityIndicator.style.width = `${quality}%`;
-        if (quality < 40) qualityIndicator.style.backgroundColor = 'var(--secondary)';
-        else if (quality < 70) qualityIndicator.style.backgroundColor = 'var(--warning)';
-        else qualityIndicator.style.backgroundColor = 'var(--success)';
-    }
-
-    function sendNetworkMessage(data) {
-        if (conn && conn.open) conn.send(data);
-    }
+    function sendNetworkMessage(data) { if (conn?.open) conn.send(data); }
 
     function handleNetworkMessage(msg) {
         switch (msg.type) {
             case 'move':
-                makeMove(msg.index, msg.player);
-                if (gameActive) {
-                    togglePlayer();
-                }
+                makeMove(msg.index, 'O');
+                if (gameActive) togglePlayer();
                 unlockBoard();
                 break;
             case 'restart_request':
-                if (confirm("الخصم يريد بدء لعبة جديدة. هل توافق؟")) {
-                    sendNetworkMessage({ type: 'restart_confirm' });
-                    startGame(true);
-                }
+                showModal("الخصم يريد بدء لعبة جديدة. هل توافق؟", [
+                    { text: "نعم", class: "success", action: () => { sendNetworkMessage({ type: 'restart_confirm' }); startGame(); }},
+                    { text: "لا", class: "secondary", action: () => {} }
+                ]);
                 break;
             case 'restart_confirm':
-                alert("وافق الخصم على بدء لعبة جديدة.");
-                startGame(true);
+                showTemporaryStatus("وافق الخصم على بدء لعبة جديدة.");
+                startGame();
                 break;
-            case 'ping':
-                sendNetworkMessage({ type: 'pong', time: msg.time });
-                break;
-            case 'pong':
-                updateConnectionQuality(msg.time);
+            case 'chat':
+                addChatMessage(msg.message, 'opponent');
                 break;
         }
     }
 
-    function lockBoard() { gameBoard.classList.add('board-locked'); }
-    function unlockBoard() { gameBoard.classList.remove('board-locked'); }
+    function addChatMessage(message, senderType) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `chat-message ${senderType}`;
+        msgDiv.textContent = message;
+        chatMessages.appendChild(msgDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
 
-    // --- ربط الأحداث ---
-    gameModeSelect.addEventListener('change', handleGameModeChange);
-    connectBtn.addEventListener('click', connectToPeer);
-    restartBtn.addEventListener('click', () => {
-        if (gameMode === 'online' && conn && conn.open) {
-            sendNetworkMessage({ type: 'restart_request' });
-            gameStatus.textContent = "تم إرسال طلب إعادة اللعب...";
+    // --- Event Listeners ---
+    gameModeSelect.addEventListener('change', () => { playSound('click'); handleGameModeChange(); });
+    connectBtn.addEventListener('click', () => { playSound('click'); connectToPeer(); });
+    inviteBtn.addEventListener('click', () => {
+        playSound('click');
+        if (peer && peer.id) {
+            const inviteLink = `${window.location.origin}${window.location.pathname}?join=${peer.id}`;
+            navigator.clipboard.writeText(inviteLink).then(() => {
+                showModal("تم نسخ رابط الدعوة!", [{ text: "رائع!", action: () => {} }]);
+            });
         } else {
-            startGame(gameMode === 'online');
+            showModal("لا يمكن إنشاء رابط دعوة. هل أنت متصل بالإنترنت؟", [{ text: "موافق", action: () => {} }]);
         }
     });
-    undoBtn.addEventListener('click', handleUndo);
+    restartBtn.addEventListener('click', () => {
+        playSound('click');
+        if (gameMode === 'online' && conn?.open) {
+            sendNetworkMessage({ type: 'restart_request' });
+            showTemporaryStatus("تم إرسال طلب إعادة اللعب...");
+        } else {
+            startGame();
+        }
+    });
     newGameBtn.addEventListener('click', () => {
-        if (confirm("هل تريد بدء جولة جديدة؟ سيتم إعادة تعيين النتائج.")) {
-            resetScores();
-            startGame(gameMode === 'online');
-        }
+        playSound('click');
+        showModal("هل تريد بدء جولة جديدة؟ سيتم إعادة تعيين النتائج.", [
+            { text: "نعم", class: "success", action: () => { resetScores(); startGame(); }},
+            { text: "لا", class: "secondary", action: () => {} }
+        ]);
     });
-    
-    myPeerIdDisplay.addEventListener('click', () => {
-        if (myPeerIdDisplay.textContent !== '...') {
-            navigator.clipboard.writeText(myPeerIdDisplay.textContent)
-                .then(() => showTemporaryStatus("تم نسخ المعرّف!", 1500))
-                .catch(() => showTemporaryStatus("فشل النسخ!", 1500, true));
+    chatForm.addEventListener('submit', e => {
+        e.preventDefault();
+        const message = chatInput.value.trim();
+        if (message) {
+            addChatMessage(message, 'me');
+            sendNetworkMessage({ type: 'chat', message: message });
+            chatInput.value = '';
         }
     });
 
-    // --- بدء التشغيل ---
-    document.querySelector('.role-btn[data-role="X"]').classList.add('active');
+    // --- Initial Load ---
+    const urlParams = new URLSearchParams(window.location.search);
+    const joinId = urlParams.get('join');
+    if (joinId) {
+        gameModeSelect.value = 'online';
+        remotePeerIdInput.value = joinId;
+    }
     handleGameModeChange();
-
-    }); // --- End of DOMContentLoaded ---
+});
 </script>
 </body>
 </html>
