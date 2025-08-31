@@ -3,257 +3,942 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لعبة X-O المبهجة</title>
+    <title>لعبة XO أونلاين - باستخدام PeerJS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* --- الخطوط والألوان --- */
-        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@700&display=swap');
-
         :root {
-            --bg-color: #f0f8ff;      /* أزرق سماوي فاتح للخلفية */
-            --board-bg: #ffffff;      /* أبيض للوحة اللعب */
-            --cell-border: #a2d2ff;   /* أزرق فاتح لحدود المربعات */
-            --x-color: #ff758f;       /* وردي فاقع للـ X */
-            --o-color: #ffca3a;       /* أصفر ذهبي للـ O */
-            --text-color: #3d405b;    /* لون نص داكن */
-            --win-color: #8ac926;     /* أخضر للفوز */
+            --bg-color: #1a1a1a;
+            --panel-bg: #2c2c2c;
+            --primary: #00aaff;
+            --secondary: #ff4444;
+            --text-color: #f0f0f0;
+            --muted-color: #888;
+            --border-color: #444;
+            --cell-bg: #333;
+            --cell-hover: #444;
+            --success: #4caf50;
+            --warning: #ff9800;
         }
-
         body {
             font-family: 'Cairo', sans-serif;
             background-color: var(--bg-color);
+            color: var(--text-color);
             display: flex;
             justify-content: center;
             align-items: center;
-            flex-direction: column;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
-            color: var(--text-color);
+            transition: background-color 0.5s ease;
         }
-
-        h1 {
-            font-size: 3rem;
-            color: var(--text-color);
-            text-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+        .app {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            width: 95%;
+            max-width: 1000px;
         }
-
-        /* --- لوحة اللعب --- */
+        .panel {
+            background-color: var(--panel-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+        .panel:hover {
+            transform: translateY(-5px);
+        }
+        .controls {
+            flex: 1;
+            min-width: 280px;
+        }
+        .game-area {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        h2, h3 {
+            color: var(--text-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        .section { 
+            margin-bottom: 20px; 
+        }
+        .row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        label, .muted { color: var(--muted-color); }
+        .tiny { font-size: 0.8em; color: var(--muted-color); }
+        select, input[type="text"], button {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background-color: var(--cell-bg);
+            color: var(--text-color);
+            font-family: 'Cairo', sans-serif;
+        }
+        button {
+            background-color: var(--primary);
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        button:hover { 
+            background-color: #0088cc; 
+            transform: translateY(-2px);
+        }
+        button:active {
+            transform: translateY(1px);
+        }
+        button.secondary { background-color: var(--secondary); }
+        button.secondary:hover { background-color: #cc3333; }
+        button.success { background-color: var(--success); }
+        button.success:hover { background-color: #3d8b40; }
+        #onlineSection { 
+            display: none; 
+            animation: fadeIn 0.5s ease;
+        }
+        .status { 
+            font-size: 0.9em; 
+            padding: 8px;
+            border-radius: 4px;
+            background-color: rgba(0,0,0,0.2);
+        }
+        .status.connected {
+            color: var(--success);
+            background-color: rgba(76, 175, 80, 0.2);
+        }
+        .status.connecting {
+            color: var(--warning);
+            background-color: rgba(255, 152, 0, 0.2);
+        }
+        .status.error {
+            color: var(--secondary);
+            background-color: rgba(255, 68, 68, 0.2);
+        }
+        .peer-id-display {
+            font-weight: bold;
+            user-select: all;
+            cursor: pointer;
+            color: var(--primary);
+            background: var(--bg-color);
+            padding: 8px;
+            border-radius: 4px;
+            text-align: center;
+            transition: all 0.3s;
+            position: relative;
+        }
+        .peer-id-display:hover {
+            background: #252525;
+        }
+        .peer-id-display:after {
+            content: "نسخ";
+            position: absolute;
+            left: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.7em;
+            color: var(--muted-color);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .peer-id-display:hover:after {
+            opacity: 1;
+        }
         #gameBoard {
             display: grid;
             grid-template-columns: repeat(3, 100px);
             grid-template-rows: repeat(3, 100px);
             gap: 10px;
-            background-color: var(--board-bg);
-            padding: 10px;
-            border-radius: 15px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
         }
-
         .cell {
-            background-color: var(--bg-color);
-            border: 2px solid var(--cell-border);
-            border-radius: 10px;
+            width: 100px;
+            height: 100px;
+            background-color: var(--cell-bg);
+            border-radius: 8px;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 4rem;
+            font-size: 3em;
             font-weight: bold;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            transition: all 0.3s;
+            position: relative;
         }
-
-        .cell:hover {
-            background-color: #e0f0ff;
+        .cell:hover { 
+            background-color: var(--cell-hover); 
+            transform: scale(1.03);
         }
-
-        .cell.x {
-            color: var(--x-color);
+        .cell.x { 
+            color: var(--primary); 
+            animation: appear 0.3s ease;
         }
-
-        .cell.o {
-            color: var(--o-color);
+        .cell.o { 
+            color: var(--secondary); 
+            animation: appear 0.3s ease;
         }
-        
-        /* --- مؤثر الفوز --- */
-        .winning-cell {
-            background-color: var(--win-color) !important;
-            animation: bounce 0.5s ease;
+        .cell.win { 
+            background-color: #ffd700; 
+            color: #1a1a1a;
+            animation: pulse 1s infinite;
         }
-
-        @keyframes bounce {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.2); }
+        #gameStatus {
+            font-size: 1.2em;
+            height: 40px;
+            color: var(--text-color);
+            text-align: center;
+            margin-bottom: 15px;
+            padding: 8px 15px;
+            border-radius: 20px;
+            background-color: rgba(0,0,0,0.2);
+            transition: all 0.3s;
         }
-
-        /* --- الرسائل والأزرار --- */
-        #status {
-            font-size: 1.5rem;
-            margin: 20px 0;
-            height: 30px;
+        .board-locked { 
+            pointer-events: none; 
+            opacity: 0.7; 
         }
-
-        #restartButton {
-            font-family: 'Cairo', sans-serif;
-            font-size: 1.2rem;
-            padding: 10px 25px;
-            border: none;
-            border-radius: 25px;
-            background-color: var(--x-color);
-            color: white;
-            cursor: pointer;
-            box-shadow: 0 5px 10px rgba(0,0,0,0.1);
-            transition: transform 0.2s ease, background-color 0.2s ease;
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-top: 20px;
+            background-color: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            padding: 10px;
         }
-
-        #restartButton:hover {
-            transform: translateY(-3px);
-            background-color: #ff5c7a;
+        .score-item {
+            text-align: center;
         }
-        
-        /* --- مؤثر قصاصات الورق --- */
-        .confetti {
-            width: 15px;
-            height: 15px;
-            background-color: #f00;
+        .score-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        .connection-quality {
+            height: 5px;
+            border-radius: 3px;
+            background-color: var(--muted-color);
+            margin-top: 5px;
+            position: relative;
+            overflow: hidden;
+        }
+        .quality-indicator {
+            height: 100%;
+            width: 0%;
+            background-color: var(--success);
+            transition: width 0.5s;
+        }
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 120px;
+            background-color: #000;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
             position: absolute;
-            top: -20px;
-            animation: fall 5s linear infinite;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
         }
-
-        @keyframes fall {
-            to {
-                transform: translateY(100vh) rotate(360deg);
-            }
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
         }
-
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes appear {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        @keyframes celebrate {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .celebrate {
+            animation: celebrate 0.5s ease;
+        }
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            opacity: 0.7;
+        }
+        .role-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .role-btn {
+            flex: 1;
+            padding: 8px;
+            text-align: center;
+            border-radius: 6px;
+            cursor: pointer;
+            background-color: var(--cell-bg);
+            transition: all 0.3s;
+        }
+        .role-btn.active {
+            background-color: var(--primary);
+            color: white;
+        }
+        .role-btn:hover:not(.active) {
+            background-color: var(--cell-hover);
+        }
     </style>
 </head>
 <body>
+<div class="app">
+    <div class="panel controls">
+        <h2>إعدادات اللعبة</h2>
+        <div class="section">
+            <div class="row">
+                <label class="muted">وضع اللعب</label>
+                <select id="gameMode">
+                    <option value="player">لاعب ضد لاعب (محلي)</option>
+                    <option value="online">أونلاين (PeerJS)</option>
+                </select>
+            </div>
+        </div>
 
-    <h1>لعبة X-O</h1>
-    <div id="status">دور اللاعب X</div>
-    <div id="gameBoard"></div>
-    <br>
-    <button id="restartButton">إعادة اللعب</button>
+        <div class="section" id="onlineSection">
+            <h3 class="muted">اللعب أونلاين (PeerJS)</h3>
+            <div class="row">
+                <div class="status" id="connectionStatus">جاري الحصول على معرّف...</div>
+            </div>
+            <div class="row">
+                <label class="tiny">المعرّف الخاص بك (انسخه وأرسله لصديقك):</label>
+                <div id="myPeerId" class="peer-id-display">...</div>
+            </div>
+            <div class="row">
+                <div class="connection-quality">
+                    <div class="quality-indicator" id="qualityIndicator"></div>
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <input type="text" id="remotePeerIdInput" placeholder="الصق معرّف صديقك هنا" />
+            </div>
+            <div class="row">
+                <button id="connectBtn">اتصال بالخصم</button>
+            </div>
+            <div class="row">
+                <div class="role-selector">
+                    <div class="role-btn" data-role="X">أريد أن أكون X</div>
+                    <div class="role-btn" data-role="O">أريد أن أكون O</div>
+                </div>
+            </div>
+        </div>
 
-    <script>
-        const board = document.getElementById('gameBoard');
-        const statusDisplay = document.getElementById('status');
-        const restartButton = document.getElementById('restartButton');
+        <div class="section">
+            <h3 class="muted">أدوات التحكم</h3>
+            <div class="row">
+                <button id="restartBtn"><i class="fas fa-redo"></i> إعادة اللعب</button>
+            </div>
+            <div class="row">
+                <button id="undoBtn" class="secondary"><i class="fas fa-undo"></i> تراجع عن حركة</button>
+            </div>
+            <div class="row">
+                <button id="newGameBtn" class="success"><i class="fas fa-plus"></i> لعبة جديدة</button>
+            </div>
+        </div>
 
-        let gameActive = true;
-        let currentPlayer = 'X';
-        let gameState = ["", "", "", "", "", "", "", "", ""];
+        <div class="section">
+            <h3 class="muted">النتائج</h3>
+            <div class="score-board">
+                <div class="score-item">
+                    <div>X</div>
+                    <div class="score-value" id="scoreX">0</div>
+                </div>
+                <div class="score-item">
+                    <div>تعادل</div>
+                    <div class="score-value" id="scoreDraw">0</div>
+                </div>
+                <div class="score-item">
+                    <div>O</div>
+                    <div class="score-value" id="scoreO">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        const winningMessage = () => `اللاعب ${currentPlayer} فاز! 🎉`;
-        const drawMessage = () => `تعادل! 🤝`;
-        const currentPlayerTurn = () => `دور اللاعب ${currentPlayer}`;
+    <div class="panel game-area">
+        <div id="gameStatus">ابدأ اللعبة أو اتصل بخصم</div>
+        <div id="gameBoard"></div>
+        <div id="timer">00:00</div>
+    </div>
+</div>
 
-        // إنشاء مربعات اللعب
+<script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+
+<script>
+    // --- عناصر التحكم واللعبة ---
+    const gameModeSelect = document.getElementById('gameMode');
+    const restartBtn = document.getElementById('restartBtn');
+    const undoBtn = document.getElementById('undoBtn');
+    const newGameBtn = document.getElementById('newGameBtn');
+    const gameBoard = document.getElementById('gameBoard');
+    const gameStatus = document.getElementById('gameStatus');
+    const timerDisplay = document.getElementById('timer');
+    const scoreX = document.getElementById('scoreX');
+    const scoreDraw = document.getElementById('scoreDraw');
+    const scoreO = document.getElementById('scoreO');
+    const qualityIndicator = document.getElementById('qualityIndicator');
+
+    // --- عناصر قسم الأونلاين ---
+    const onlineSection = document.getElementById('onlineSection');
+    const connectionStatus = document.getElementById('connectionStatus');
+    const myPeerIdDisplay = document.getElementById('myPeerId');
+    const remotePeerIdInput = document.getElementById('remotePeerIdInput');
+    const connectBtn = document.getElementById('connectBtn');
+    const roleButtons = document.querySelectorAll('.role-btn');
+
+    // --- متغيرات حالة اللعبة ---
+    let boardState = Array(9).fill(null);
+    let currentPlayer = 'X';
+    let gameActive = true;
+    let history = [];
+    let gameMode = 'player';
+    let scores = { X: 0, O: 0, draw: 0 };
+    let gameTimer = null;
+    let timeElapsed = 0;
+
+    // --- متغيرات الشبكة ---
+    let peer = null;
+    let conn = null;
+    let myRole = ''; // 'X' or 'O'
+    let desiredRole = 'X'; // الدور المفضل للمستخدم
+    let connectionPingInterval = null;
+    let lastPingTime = 0;
+
+    // --- وظائف اللعبة الأساسية ---
+    function createBoard() {
+        gameBoard.innerHTML = '';
         for (let i = 0; i < 9; i++) {
             const cell = document.createElement('div');
             cell.classList.add('cell');
-            cell.dataset.cellIndex = i;
+            cell.dataset.index = i;
             cell.addEventListener('click', handleCellClick);
-            board.appendChild(cell);
+            gameBoard.appendChild(cell);
+        }
+    }
+
+    function handleCellClick(event) {
+        const index = event.target.dataset.index;
+
+        if (!gameActive || boardState[index]) {
+            return;
         }
 
-        statusDisplay.innerHTML = currentPlayerTurn();
+        // في وضع الأونلاين، تأكد أنه دورك
+        if (gameMode === 'online' && currentPlayer !== myRole) {
+            showTemporaryStatus("ليس دورك!", 1000);
+            return;
+        }
 
-        function handleCellClick(clickedCellEvent) {
-            const clickedCell = clickedCellEvent.target;
-            const clickedCellIndex = parseInt(clickedCell.dataset.cellIndex);
+        makeMove(index, currentPlayer);
 
-            if (gameState[clickedCellIndex] !== "" || !gameActive) {
-                return;
+        // إرسال الحركة للخصم في وضع الأونلاين
+        if (gameMode === 'online') {
+            sendNetworkMessage({ type: 'move', index: index, player: currentPlayer });
+            togglePlayer();
+            lockBoard(); // قفل اللوحة بعد اللعب
+        } else {
+            togglePlayer();
+        }
+    }
+
+    function makeMove(index, player) {
+        if (!gameActive || boardState[index]) return;
+
+        history.push([...boardState]);
+        boardState[index] = player;
+        const cell = document.querySelector(`.cell[data-index='${index}']`);
+        cell.textContent = player;
+        cell.classList.add(player.toLowerCase());
+
+        // تشغيل صوت الحركة
+        playSound('move');
+
+        if (checkWin(player)) {
+            endGame(false, player);
+            // تحديث النتيجة
+            scores[player]++;
+            updateScores();
+            // تشغيل صوت الفوز
+            playSound('win');
+        } else if (boardState.every(cell => cell)) {
+            endGame(true);
+            scores.draw++;
+            updateScores();
+            // تشغيل صوت التعادل
+            playSound('draw');
+        }
+    }
+
+    function togglePlayer() {
+        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+        updateStatus();
+    }
+
+    function updateStatus() {
+        if (gameActive) {
+            gameStatus.textContent = `الدور على اللاعب: ${currentPlayer}`;
+            if (gameMode === 'online') {
+                if (currentPlayer === myRole) {
+                    gameStatus.textContent += " (أنت)";
+                } else {
+                    gameStatus.textContent += " (الخصم)";
+                }
             }
-
-            handleCellPlayed(clickedCell, clickedCellIndex);
-            handleResultValidation();
         }
+    }
 
-        function handleCellPlayed(clickedCell, clickedCellIndex) {
-            gameState[clickedCellIndex] = currentPlayer;
-            clickedCell.innerHTML = currentPlayer;
-            clickedCell.classList.add(currentPlayer.toLowerCase());
-        }
-
-        const winningConditions = [
-            [0, 1, 2], [3, 4, 5], [6, 7, 8], // صفوف
-            [0, 3, 6], [1, 4, 7], [2, 5, 8], // أعمدة
-            [0, 4, 8], [2, 4, 6]             // أقطار
+    function checkWin(player) {
+        const winConditions = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+            [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+            [0, 4, 8], [2, 4, 6]  // Diagonals
         ];
-
-        function handleResultValidation() {
-            let roundWon = false;
-            let winningLine;
-            for (let i = 0; i < winningConditions.length; i++) {
-                const winCondition = winningConditions[i];
-                let a = gameState[winCondition[0]];
-                let b = gameState[winCondition[1]];
-                let c = gameState[winCondition[2]];
-                if (a === '' || b === '' || c === '') {
-                    continue;
-                }
-                if (a === b && b === c) {
-                    roundWon = true;
-                    winningLine = winCondition;
-                    break;
-                }
-            }
-
-            if (roundWon) {
-                statusDisplay.innerHTML = winningMessage();
-                gameActive = false;
-                // مؤثر الفوز
-                winningLine.forEach(index => {
-                    document.querySelector(`[data-cell-index='${index}']`).classList.add('winning-cell');
+        return winConditions.some(combination => {
+            const isWin = combination.every(index => boardState[index] === player);
+            if (isWin) {
+                combination.forEach(index => {
+                    document.querySelector(`.cell[data-index='${index}']`).classList.add('win');
                 });
-                launchConfetti(); // إطلاق القصاصات
+            }
+            return isWin;
+        });
+    }
+
+    function endGame(isDraw, winner = null) {
+        gameActive = false;
+        clearInterval(gameTimer);
+        
+        if (isDraw) {
+            gameStatus.textContent = 'انتهت اللعبة بالتعادل!';
+            gameStatus.classList.add('celebrate');
+        } else {
+            gameStatus.textContent = `اللاعب ${winner} فاز!`;
+            gameStatus.classList.add('celebrate');
+            // إضافة تأثير احتفالي
+            if (winner === myRole || gameMode !== 'online') {
+                createConfetti();
+            }
+        }
+        
+        // إزالة تأثير الاحتفال بعد 3 ثوان
+        setTimeout(() => {
+            gameStatus.classList.remove('celebrate');
+        }, 3000);
+    }
+
+    function startGame() {
+        boardState.fill(null);
+        history = [];
+        gameActive = true;
+        currentPlayer = 'X';
+        createBoard();
+        updateStatus();
+        
+        // إعادة تعيين المؤقت
+        clearInterval(gameTimer);
+        timeElapsed = 0;
+        updateTimer();
+        gameTimer = setInterval(updateTimer, 1000);
+        
+        if (gameMode === 'online') {
+            // البادئ بالاتصال (X) يلعب أولاً
+            if (myRole === 'X') {
+                unlockBoard();
+                gameStatus.textContent = "دورك للعب (X)";
+            } else {
+                lockBoard();
+                gameStatus.textContent = "في انتظار حركة الخصم (O)";
+            }
+        }
+    }
+
+    function updateTimer() {
+        timeElapsed++;
+        const minutes = Math.floor(timeElapsed / 60);
+        const seconds = timeElapsed % 60;
+        timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    function updateScores() {
+        scoreX.textContent = scores.X;
+        scoreO.textContent = scores.O;
+        scoreDraw.textContent = scores.draw;
+    }
+
+    function handleUndo() {
+        if (gameMode === 'online') {
+            // لا يمكن التراجع عن حركة الخصم
+            if (currentPlayer === myRole) {
+                showTemporaryStatus("لا يمكنك التراجع عن حركة لم تقم بها.", 2000);
                 return;
             }
-
-            let roundDraw = !gameState.includes("");
-            if (roundDraw) {
-                statusDisplay.innerHTML = drawMessage();
-                gameActive = false;
-                return;
-            }
-
-            handlePlayerChange();
+            sendNetworkMessage({ type: 'undo_request' });
+            gameStatus.textContent = "تم إرسال طلب تراجع...";
+        } else {
+            performUndo();
         }
+    }
 
-        function handlePlayerChange() {
-            currentPlayer = currentPlayer === "X" ? "O" : "X";
-            statusDisplay.innerHTML = currentPlayerTurn();
-        }
-
-        restartButton.addEventListener('click', () => {
-            gameActive = true;
-            currentPlayer = 'X';
-            gameState = ["", "", "", "", "", "", "", "", ""];
-            statusDisplay.innerHTML = currentPlayerTurn();
-            document.querySelectorAll('.cell').forEach(cell => {
-                cell.innerHTML = "";
-                cell.classList.remove('x', 'o', 'winning-cell');
+    function performUndo() {
+        if (history.length > 0) {
+            boardState = history.pop();
+            createBoard(); // Re-render board
+            boardState.forEach((player, index) => {
+                if (player) {
+                    const cell = document.querySelector(`.cell[data-index='${index}']`);
+                    cell.textContent = player;
+                    cell.classList.add(player.toLowerCase());
+                }
             });
-            // إزالة القصاصات القديمة
-            document.querySelectorAll('.confetti').forEach(c => c.remove());
+            gameActive = true;
+            togglePlayer(); // يعود الدور للاعب السابق
+            // تشغيل صوت التراجع
+            playSound('undo');
+        }
+    }
+
+    function resetScores() {
+        scores = { X: 0, O: 0, draw: 0 };
+        updateScores();
+    }
+
+    function showTemporaryStatus(message, duration) {
+        const originalText = gameStatus.textContent;
+        gameStatus.textContent = message;
+        setTimeout(() => {
+            gameStatus.textContent = originalText;
+        }, duration);
+    }
+
+    function playSound(type) {
+        // هذا مكان لإضافة الأصوات
+        // يمكن تنفيذها باستخدام Audio API
+        console.log(`Playing sound: ${type}`);
+    }
+
+    function createConfetti() {
+        // تأثير احتفالي بسيط
+        for (let i = 0; i < 30; i++) {
+            const confetti = document.createElement('div');
+            confetti.classList.add('confetti');
+            confetti.style.left = Math.random() * 100 + '%';
+            confetti.style.top = Math.random() * 100 + '%';
+            confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+            confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+            document.body.appendChild(confetti);
+            
+            setTimeout(() => {
+                confetti.remove();
+            }, 3000);
+        }
+    }
+
+    // --- وظائف الشبكة و PeerJS ---
+
+    function handleGameModeChange() {
+        gameMode = gameModeSelect.value;
+        if (gameMode === 'online') {
+            onlineSection.style.display = 'block';
+            if (!peer || peer.destroyed) {
+                initializePeer();
+            }
+        } else {
+            onlineSection.style.display = 'none';
+            if (peer) {
+                peer.destroy();
+                clearInterval(connectionPingInterval);
+            }
+            // العودة إلى وضع اللاعبين المحلي
+            myRole = '';
+            startGame();
+        }
+    }
+
+    function initializePeer() {
+        peer = new Peer({
+            debug: 3,
+            config: {
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:stun1.l.google.com:19302' }
+                ]
+            }
         });
 
-        // --- مؤثر قصاصات الورق عند الفوز ---
-        function launchConfetti() {
-            const colors = ['#ff758f', '#ffca3a', '#8ac926', '#a2d2ff', '#3d405b'];
-            for (let i = 0; i < 100; i++) {
-                const confetti = document.createElement('div');
-                confetti.classList.add('confetti');
-                confetti.style.left = Math.random() * 100 + 'vw';
-                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-                confetti.style.animationDelay = Math.random() * 2 + 's';
-                confetti.style.transform = `scale(${Math.random() * 1.5 + 0.5})`;
-                document.body.appendChild(confetti);
+        peer.on('open', (id) => {
+            myPeerIdDisplay.textContent = id;
+            connectionStatus.textContent = 'جاهز للاتصال';
+            connectionStatus.className = 'status connected';
+            
+            // نسخ المعرّف تلقائياً عند النقر
+            myPeerIdDisplay.addEventListener('click', () => {
+                navigator.clipboard.writeText(id);
+                showTemporaryStatus("تم نسخ المعرّف!", 1500);
+            });
+        });
+
+        peer.on('connection', (newConn) => {
+            if (conn && conn.open) {
+                newConn.close(); // إذا كان هناك اتصال قائم، ارفض الجديد
+                showTemporaryStatus("اتصال مرفوض - يوجد اتصال نشط بالفعل", 2000);
+                return;
             }
+            conn = newConn;
+            // المفاوضة على الأدوار
+            negotiateRoles(true);
+            setupConnectionHandlers();
+        });
+
+        peer.on('error', (err) => {
+            console.error('PeerJS error:', err);
+            connectionStatus.textContent = `خطأ: ${err.type}`;
+            connectionStatus.className = 'status error';
+            alert(`حدث خطأ في الاتصال: ${err.type}. حاول تحديث الصفحة.`);
+        });
+    }
+
+    function negotiateRoles(isIncoming) {
+        if (isIncoming) {
+            // إذا كان الاتصال وارداً، نكون O إلا إذا طلبنا خلاف ذلك
+            myRole = desiredRole === 'X' ? 'O' : 'X';
+            sendNetworkMessage({ type: 'role_negotiation', desiredRole: desiredRole });
+        }
+    }
+
+    function connectToPeer() {
+        const remoteId = remotePeerIdInput.value.trim();
+        if (!remoteId) {
+            alert('الرجاء إدخال معرّف الخصم.');
+            return;
+        }
+        if (conn && conn.open) {
+            alert("أنت متصل بالفعل.");
+            return;
         }
 
-    </script>
+        conn = peer.connect(remoteId, { reliable: true });
+        // المفاوضة على الأدوار
+        negotiateRoles(false);
+        setupConnectionHandlers();
+    }
+
+    function setupConnectionHandlers() {
+        conn.on('open', () => {
+            connectionStatus.textContent = `متصل باللاعب ${conn.peer}`;
+            connectionStatus.className = 'status connected';
+            remotePeerIdInput.disabled = true;
+            connectBtn.disabled = true;
+            
+            // بدء فحص جودة الاتصال
+            startConnectionQualityCheck();
+            
+            startGame();
+        });
+
+        conn.on('data', (data) => {
+            handleNetworkMessage(data);
+        });
+
+        conn.on('close', () => {
+            connectionStatus.textContent = 'انقطع الاتصال بالخصم.';
+            connectionStatus.className = 'status error';
+            alert('لقد انقطع الاتصال بالخصم.');
+            remotePeerIdInput.disabled = false;
+            connectBtn.disabled = false;
+            conn = null;
+            clearInterval(connectionPingInterval);
+            startGame(); // إعادة اللعبة للوضع المحلي
+        });
+        
+        conn.on('error', (err) => {
+            console.error('Connection error:', err);
+            connectionStatus.textContent = `خطأ في الاتصال: ${err.type}`;
+            connectionStatus.className = 'status error';
+        });
+    }
+
+    function startConnectionQualityCheck() {
+        clearInterval(connectionPingInterval);
+        lastPingTime = Date.now();
+        
+        connectionPingInterval = setInterval(() => {
+            if (conn && conn.open) {
+                sendNetworkMessage({ type: 'ping', time: Date.now() });
+            }
+        }, 2000);
+    }
+
+    function updateConnectionQuality(pingTime) {
+        const latency = Date.now() - pingTime;
+        let quality = 100;
+        
+        if (latency > 1000) quality = 10;
+        else if (latency > 500) quality = 30;
+        else if (latency > 300) quality = 50;
+        else if (latency > 100) quality = 70;
+        else if (latency > 50) quality = 90;
+        
+        qualityIndicator.style.width = `${quality}%`;
+        
+        if (quality < 50) {
+            qualityIndicator.style.backgroundColor = var(--secondary);
+        } else if (quality < 80) {
+            qualityIndicator.style.backgroundColor = var(--warning);
+        } else {
+            qualityIndicator.style.backgroundColor = var(--success);
+        }
+    }
+
+    function sendNetworkMessage(data) {
+        if (conn && conn.open) {
+            conn.send(data);
+        }
+    }
+
+    function handleNetworkMessage(msg) {
+        switch (msg.type) {
+            case 'move':
+                makeMove(msg.index, msg.player);
+                togglePlayer();
+                unlockBoard(); // فتح اللوحة بعد استقبال حركة الخصم
+                break;
+            case 'restart_request':
+                if (confirm("الخصم يريد بدء لعبة جديدة. هل توافق؟")) {
+                    sendNetworkMessage({ type: 'restart_confirm' });
+                    startGame();
+                }
+                break;
+            case 'restart_confirm':
+                alert("وافق الخصم على بدء لعبة جديدة.");
+                startGame();
+                break;
+            case 'undo_request':
+                if (confirm("الخصم يريد التراجع عن حركته الأخيرة. هل توافق؟")) {
+                    sendNetworkMessage({ type: 'undo_confirm' });
+                    performUndo();
+                }
+                break;
+            case 'undo_confirm':
+                alert("وافق الخصم على طلب التراجع.");
+                performUndo();
+                break;
+            case 'role_negotiation':
+                // معالجة مفاوضة الأدوار
+                if (msg.desiredRole === desiredRole) {
+                    // إذا كان كلا اللاعبين يريدون نفس الدور، نعطي الأولوية للمتصل
+                    if (conn && conn.peer > peer.id) {
+                        myRole = desiredRole === 'X' ? 'O' : 'X';
+                    } else {
+                        myRole = desiredRole;
+                    }
+                } else {
+                    myRole = desiredRole;
+                }
+                sendNetworkMessage({ type: 'role_assignment', assignedRole: myRole });
+                break;
+            case 'role_assignment':
+                myRole = msg.assignedRole;
+                startGame();
+                break;
+            case 'ping':
+                sendNetworkMessage({ type: 'pong', time: msg.time });
+                break;
+            case 'pong':
+                updateConnectionQuality(msg.time);
+                break;
+        }
+    }
+
+    function lockBoard() {
+        gameBoard.classList.add('board-locked');
+    }
+
+    function unlockBoard() {
+        gameBoard.classList.remove('board-locked');
+    }
+
+    // --- ربط الأحداث ---
+    gameModeSelect.addEventListener('change', handleGameModeChange);
+    connectBtn.addEventListener('click', connectToPeer);
+    restartBtn.addEventListener('click', () => {
+        if (gameMode === 'online' && conn && conn.open) {
+            sendNetworkMessage({ type: 'restart_request' });
+            gameStatus.textContent = "تم إرسال طلب إعادة اللعب...";
+        } else {
+            startGame();
+        }
+    });
+    undoBtn.addEventListener('click', handleUndo);
+    newGameBtn.addEventListener('click', () => {
+        if (confirm("هل تريد بدء لعبة جديدة؟ سيتم إعادة تعيين النتائج.")) {
+            resetScores();
+            startGame();
+        }
+    });
+    
+    // أحداث أزرار اختيار الدور
+    roleButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            roleButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            desiredRole = btn.dataset.role;
+        });
+    });
+
+    // نسخ المعرّف عند النقر
+    myPeerIdDisplay.addEventListener('click', () => {
+        if (myPeerIdDisplay.textContent !== '...') {
+            navigator.clipboard.writeText(myPeerIdDisplay.textContent);
+            showTemporaryStatus("تم نسخ المعرّف!", 1500);
+        }
+    });
+
+    // --- بدء التشغيل ---
+    window.onload = () => {
+        // تفعيل زر X افتراضياً
+        document.querySelector('.role-btn[data-role="X"]').classList.add('active');
+        handleGameModeChange();
+        createBoard();
+        updateScores();
+    };
+</script>
 </body>
 </html>
