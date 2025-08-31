@@ -233,7 +233,8 @@ document.addEventListener('DOMContentLoaded', () => {
         makeMove(index, currentPlayer);
 
         if (gameMode === 'online' && conn?.open) {
-            sendNetworkMessage({ type: 'move', index: index });
+            // *** FIX 1: Send the current player's symbol with the move ***
+            sendNetworkMessage({ type: 'move', index: index, player: currentPlayer });
             lockBoard();
         } else if (gameMode === 'ai' && gameActive) {
             lockBoard();
@@ -446,7 +447,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleNetworkMessage(msg) {
         switch (msg.type) {
             case 'move':
-                makeMove(msg.index, 'O');
+                // *** FIX 2: Use the player symbol received in the message ***
+                makeMove(msg.index, msg.player);
                 if (gameActive) togglePlayer();
                 unlockBoard();
                 break;
