@@ -7,68 +7,556 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* --- نفس أكواد CSS السابقة بالكامل --- */
         :root {
-            --bg-color: #1a1a1a; --panel-bg: #2c2c2c; --primary: #00aaff; --secondary: #ff4444; --text-color: #f0f0f0; --muted-color: #888; --border-color: #444; --cell-bg: #333; --cell-hover: #444; --success: #4caf50; --warning: #ff9800;
+            --bg-color: #1a1a1a; 
+            --panel-bg: #2c2c2c; 
+            --primary: #00aaff; 
+            --secondary: #ff4444; 
+            --text-color: #f0f0f0; 
+            --muted-color: #888; 
+            --border-color: #444; 
+            --cell-bg: #333; 
+            --cell-hover: #444; 
+            --success: #4caf50; 
+            --warning: #ff9800;
+            --info: #2196f3;
+            --danger: #f44336;
         }
-        body { font-family: 'Cairo', sans-serif; background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 10px; box-sizing: border-box; }
-        .app { display: flex; flex-wrap: wrap; gap: 20px; width: 100%; max-width: 1200px; }
-        .panel { background-color: var(--panel-bg); border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: transform 0.3s ease; }
-        .panel:hover { transform: translateY(-5px); }
-        .controls { flex: 1; min-width: 300px; }
-        .game-area { flex: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 340px; }
-        h2, h3 { color: var(--text-color); border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-top: 0; }
-        .section { margin-bottom: 20px; }
-        .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 10px; }
-        label, .muted { color: var(--muted-color); }
-        .tiny { font-size: 0.8em; color: var(--muted-color); }
-        select, input[type="text"], button { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border-color); background-color: var(--cell-bg); color: var(--text-color); font-family: 'Cairo', sans-serif; box-sizing: border-box; }
-        button { background-color: var(--primary); border: none; cursor: pointer; font-weight: bold; transition: all 0.3s; position: relative; overflow: hidden; }
-        button:hover { background-color: #0088cc; transform: translateY(-2px); }
-        button:active { transform: translateY(1px); }
-        button.secondary { background-color: var(--secondary); }
-        button.secondary:hover { background-color: #cc3333; }
-        button.success { background-color: var(--success); }
-        button.success:hover { background-color: #3d8b40; }
-        #onlineSection, #chatSection { display: none; animation: fadeIn 0.5s ease; }
-        .status { font-size: 0.9em; padding: 8px; border-radius: 4px; background-color: rgba(0,0,0,0.2); width: 100%; text-align: center; }
-        .status.connected { color: var(--success); background-color: rgba(76, 175, 80, 0.2); }
-        .status.error { color: var(--secondary); background-color: rgba(255, 68, 68, 0.2); }
-        .peer-id-display { font-weight: bold; user-select: all; cursor: pointer; color: var(--primary); background: var(--bg-color); padding: 8px; border-radius: 4px; text-align: center; transition: all 0.3s; position: relative; width: 100%; }
-        #gameBoard { display: grid; grid-template-columns: repeat(3, minmax(80px, 100px)); grid-template-rows: repeat(3, minmax(80px, 100px)); gap: 10px; margin-bottom: 20px; }
-        .cell { width: 100%; height: 100%; background-color: var(--cell-bg); border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: 3em; font-weight: bold; cursor: pointer; transition: all 0.3s; }
-        .cell:hover { background-color: var(--cell-hover); transform: scale(1.03); }
-        .cell.x { color: var(--primary); animation: appear 0.3s ease; }
-        .cell.o { color: var(--secondary); animation: appear 0.3s ease; }
-        .cell.win { background-color: #ffd700; color: #1a1a1a; animation: pulse 1s infinite; }
-        #gameStatus { font-size: 1.2em; min-height: 40px; color: var(--text-color); text-align: center; margin-bottom: 15px; padding: 8px 15px; border-radius: 20px; background-color: rgba(0,0,0,0.2); transition: all 0.3s; }
-        .board-locked { pointer-events: none; opacity: 0.7; }
-        .score-board { display: flex; justify-content: space-around; width: 100%; margin-top: 20px; background-color: rgba(0,0,0,0.2); border-radius: 10px; padding: 10px; }
-        .score-item { text-align: center; }
-        .score-value { font-size: 1.5em; font-weight: bold; color: var(--primary); }
-        .score-item:last-of-type .score-value { color: var(--secondary); }
-        .connection-quality { width: 100%; height: 5px; border-radius: 3px; background-color: var(--muted-color); margin-top: 5px; position: relative; overflow: hidden; }
-        .quality-indicator { height: 100%; width: 100%; background-color: var(--success); transition: width 0.5s, background-color 0.5s; }
-        .confetti-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
-        .confetti { position: absolute; width: 10px; height: 10px; opacity: 0.7; animation: fall 3s linear forwards; }
-        /* --- New Chat Styles --- */
-        #chatMessages { height: 150px; overflow-y: auto; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; margin-bottom: 10px; font-size: 0.9em; }
-        .chat-message { margin-bottom: 8px; }
-        .chat-message.me { text-align: left; color: var(--primary); }
-        .chat-message.opponent { text-align: right; color: var(--secondary); }
-        .chat-message .sender { font-weight: bold; }
-        /* --- New Modal Styles --- */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 10000; animation: fadeIn 0.3s; }
-        .modal-content { background: var(--panel-bg); padding: 30px; border-radius: 12px; text-align: center; box-shadow: 0 5px 20px rgba(0,0,0,0.4); }
-        .modal-content p { margin: 0 0 20px 0; font-size: 1.2em; }
-        .modal-buttons { display: flex; gap: 15px; justify-content: center; }
-        @keyframes fall { to { transform: translateY(100vh) rotate(360deg); opacity: 0; } }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes appear { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        @keyframes pulse { 0% { box-shadow: 0 0 5px 2px #ffd700; } 50% { box-shadow: 0 0 20px 10px #ffd700; } 100% { box-shadow: 0 0 5px 2px #ffd700; } }
+        
+        body { 
+            font-family: 'Cairo', sans-serif; 
+            background-color: var(--bg-color); 
+            color: var(--text-color); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            margin: 0; 
+            padding: 10px; 
+            box-sizing: border-box; 
+        }
+        
+        .app { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 20px; 
+            width: 100%; 
+            max-width: 1200px; 
+        }
+        
+        .panel { 
+            background-color: var(--panel-bg); 
+            border-radius: 12px; 
+            padding: 20px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); 
+            transition: transform 0.3s ease; 
+        }
+        
+        .panel:hover { 
+            transform: translateY(-5px); 
+        }
+        
+        .controls { 
+            flex: 1; 
+            min-width: 300px; 
+        }
+        
+        .game-area { 
+            flex: 2; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            min-width: 340px; 
+        }
+        
+        h2, h3 { 
+            color: var(--text-color); 
+            border-bottom: 1px solid var(--border-color); 
+            padding-bottom: 10px; 
+            margin-top: 0; 
+        }
+        
+        .section { 
+            margin-bottom: 20px; 
+        }
+        
+        .row { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 15px; 
+            gap: 10px; 
+        }
+        
+        label, .muted { 
+            color: var(--muted-color); 
+        }
+        
+        .tiny { 
+            font-size: 0.8em; 
+            color: var(--muted-color); 
+        }
+        
+        select, input[type="text"], button { 
+            width: 100%; 
+            padding: 10px; 
+            border-radius: 6px; 
+            border: 1px solid var(--border-color); 
+            background-color: var(--cell-bg); 
+            color: var(--text-color); 
+            font-family: 'Cairo', sans-serif; 
+            box-sizing: border-box; 
+        }
+        
+        button { 
+            background-color: var(--primary); 
+            border: none; 
+            cursor: pointer; 
+            font-weight: bold; 
+            transition: all 0.3s; 
+            position: relative; 
+            overflow: hidden; 
+        }
+        
+        button:hover { 
+            background-color: #0088cc; 
+            transform: translateY(-2px); 
+        }
+        
+        button:active { 
+            transform: translateY(1px); 
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        button.secondary { 
+            background-color: var(--secondary); 
+        }
+        
+        button.secondary:hover { 
+            background-color: #cc3333; 
+        }
+        
+        button.success { 
+            background-color: var(--success); 
+        }
+        
+        button.success:hover { 
+            background-color: #3d8b40; 
+        }
+        
+        button.warning { 
+            background-color: var(--warning); 
+        }
+        
+        button.warning:hover { 
+            background-color: #e68900; 
+        }
+        
+        button.info { 
+            background-color: var(--info); 
+        }
+        
+        button.info:hover { 
+            background-color: #1976d2; 
+        }
+        
+        #onlineSection, #chatSection { 
+            display: none; 
+            animation: fadeIn 0.5s ease; 
+        }
+        
+        .status { 
+            font-size: 0.9em; 
+            padding: 8px; 
+            border-radius: 4px; 
+            background-color: rgba(0,0,0,0.2); 
+            width: 100%; 
+            text-align: center; 
+            transition: all 0.3s;
+        }
+        
+        .status.connected { 
+            color: var(--success); 
+            background-color: rgba(76, 175, 80, 0.2); 
+        }
+        
+        .status.connecting { 
+            color: var(--warning); 
+            background-color: rgba(255, 152, 0, 0.2); 
+            animation: pulse 1.5s infinite;
+        }
+        
+        .status.error { 
+            color: var(--secondary); 
+            background-color: rgba(255, 68, 68, 0.2); 
+        }
+        
+        .status.waiting { 
+            color: var(--info); 
+            background-color: rgba(33, 150, 243, 0.2); 
+        }
+        
+        .peer-id-display { 
+            font-weight: bold; 
+            user-select: all; 
+            cursor: pointer; 
+            color: var(--primary); 
+            background: var(--bg-color); 
+            padding: 8px; 
+            border-radius: 4px; 
+            text-align: center; 
+            transition: all 0.3s; 
+            position: relative; 
+            width: 100%; 
+        }
+        
+        #gameBoard { 
+            display: grid; 
+            grid-template-columns: repeat(3, minmax(80px, 100px)); 
+            grid-template-rows: repeat(3, minmax(80px, 100px)); 
+            gap: 10px; 
+            margin-bottom: 20px; 
+        }
+        
+        .cell { 
+            width: 100%; 
+            height: 100%; 
+            background-color: var(--cell-bg); 
+            border-radius: 8px; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            font-size: 3em; 
+            font-weight: bold; 
+            cursor: pointer; 
+            transition: all 0.3s; 
+            position: relative;
+        }
+        
+        .cell:hover { 
+            background-color: var(--cell-hover); 
+            transform: scale(1.03); 
+        }
+        
+        .cell.x { 
+            color: var(--primary); 
+            animation: appear 0.3s ease; 
+        }
+        
+        .cell.o { 
+            color: var(--secondary); 
+            animation: appear 0.3s ease; 
+        }
+        
+        .cell.win { 
+            background-color: #ffd700; 
+            color: #1a1a1a; 
+            animation: pulse 1s infinite; 
+        }
+        
+        .cell.my-turn {
+            box-shadow: 0 0 15px var(--primary);
+        }
+        
+        .cell.opponent-turn {
+            box-shadow: 0 0 15px var(--secondary);
+        }
+        
+        #gameStatus { 
+            font-size: 1.2em; 
+            min-height: 40px; 
+            color: var(--text-color); 
+            text-align: center; 
+            margin-bottom: 15px; 
+            padding: 8px 15px; 
+            border-radius: 20px; 
+            background-color: rgba(0,0,0,0.2); 
+            transition: all 0.3s; 
+        }
+        
+        .board-locked { 
+            pointer-events: none; 
+            opacity: 0.7; 
+        }
+        
+        .score-board { 
+            display: flex; 
+            justify-content: space-around; 
+            width: 100%; 
+            margin-top: 20px; 
+            background-color: rgba(0,0,0,0.2); 
+            border-radius: 10px; 
+            padding: 10px; 
+        }
+        
+        .score-item { 
+            text-align: center; 
+        }
+        
+        .score-value { 
+            font-size: 1.5em; 
+            font-weight: bold; 
+            color: var(--primary); 
+        }
+        
+        .score-item:last-of-type .score-value { 
+            color: var(--secondary); 
+        }
+        
+        .connection-quality { 
+            width: 100%; 
+            height: 5px; 
+            border-radius: 3px; 
+            background-color: var(--muted-color); 
+            margin-top: 5px; 
+            position: relative; 
+            overflow: hidden; 
+        }
+        
+        .quality-indicator { 
+            height: 100%; 
+            width: 100%; 
+            background-color: var(--success); 
+            transition: width 0.5s, background-color 0.5s; 
+        }
+        
+        .confetti-container { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            pointer-events: none; 
+            z-index: 9999; 
+        }
+        
+        .confetti { 
+            position: absolute; 
+            width: 10px; 
+            height: 10px; 
+            opacity: 0.7; 
+            animation: fall 3s linear forwards; 
+        }
+        
+        /* Chat Styles */
+        #chatMessages { 
+            height: 150px; 
+            overflow-y: auto; 
+            background-color: var(--bg-color); 
+            border: 1px solid var(--border-color); 
+            border-radius: 6px; 
+            padding: 10px; 
+            margin-bottom: 10px; 
+            font-size: 0.9em; 
+        }
+        
+        .chat-message { 
+            margin-bottom: 8px; 
+            padding: 5px;
+            border-radius: 5px;
+        }
+        
+        .chat-message.me { 
+            text-align: left; 
+            color: var(--primary); 
+            background-color: rgba(0, 170, 255, 0.1);
+        }
+        
+        .chat-message.opponent { 
+            text-align: right; 
+            color: var(--secondary); 
+            background-color: rgba(255, 68, 68, 0.1);
+        }
+        
+        .chat-message .sender { 
+            font-weight: bold; 
+        }
+        
+        /* Modal Styles */
+        .modal-overlay { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(0,0,0,0.7); 
+            display: none; 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 10000; 
+            animation: fadeIn 0.3s; 
+        }
+        
+        .modal-content { 
+            background: var(--panel-bg); 
+            padding: 30px; 
+            border-radius: 12px; 
+            text-align: center; 
+            box-shadow: 0 5px 20px rgba(0,0,0,0.4); 
+            max-width: 400px;
+            width: 90%;
+        }
+        
+        .modal-content p { 
+            margin: 0 0 20px 0; 
+            font-size: 1.2em; 
+        }
+        
+        .modal-buttons { 
+            display: flex; 
+            gap: 15px; 
+            justify-content: center; 
+            flex-wrap: wrap;
+        }
+        
+        .modal-buttons button {
+            min-width: 100px;
+            flex: 1;
+        }
+        
+        /* Loading indicator */
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--muted-color);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s linear infinite;
+            margin-left: 5px;
+        }
+        
+        /* Network status indicator */
+        .network-status {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.8em;
+            margin-top: 5px;
+        }
+        
+        .network-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--muted-color);
+            animation: pulse 2s infinite;
+        }
+        
+        .network-dot.good {
+            background-color: var(--success);
+        }
+        
+        .network-dot.medium {
+            background-color: var(--warning);
+        }
+        
+        .network-dot.bad {
+            background-color: var(--danger);
+        }
+        
+        /* Reconnection banner */
+        .reconnection-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background-color: var(--warning);
+            color: white;
+            text-align: center;
+            padding: 10px;
+            transform: translateY(-100%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .reconnection-banner.show {
+            transform: translateY(0);
+        }
+        
+        @keyframes fall { 
+            to { 
+                transform: translateY(100vh) rotate(360deg); 
+                opacity: 0; 
+            } 
+        }
+        
+        @keyframes fadeIn { 
+            from { 
+                opacity: 0; 
+            } 
+            to { 
+                opacity: 1; 
+            } 
+        }
+        
+        @keyframes appear { 
+            from { 
+                transform: scale(0.8); 
+                opacity: 0; 
+            } 
+            to { 
+                transform: scale(1); 
+                opacity: 1; 
+            } 
+        }
+        
+        @keyframes pulse { 
+            0% { 
+                box-shadow: 0 0 5px 2px #ffd700; 
+            } 
+            50% { 
+                box-shadow: 0 0 20px 10px #ffd700; 
+            } 
+            100% { 
+                box-shadow: 0 0 5px 2px #ffd700; 
+            } 
+        }
+        
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        /* Responsive design improvements */
+        @media (max-width: 768px) {
+            .app {
+                flex-direction: column;
+            }
+            
+            .controls, .game-area {
+                min-width: unset;
+                width: 100%;
+            }
+            
+            #gameBoard {
+                grid-template-columns: repeat(3, 90px);
+                grid-template-rows: repeat(3, 90px);
+            }
+            
+            .cell {
+                font-size: 2.5em;
+            }
+            
+            .modal-buttons {
+                flex-direction: column;
+            }
+        }
     </style>
 </head>
 <body>
+<!-- Reconnection Banner -->
+<div class="reconnection-banner" id="reconnectionBanner">
+    <i class="fas fa-wifi"></i> جارٍ إعادة الاتصال... <span class="loading-spinner"></span>
+</div>
+
 <!-- Confetti and Modal containers -->
 <div id="confetti-container"></div>
 <div class="modal-overlay" id="modalOverlay">
@@ -94,25 +582,61 @@
 
         <div class="section" id="onlineSection">
             <h3 class="muted">اللعب أونلاين</h3>
-            <div class="row"><div class="status" id="connectionStatus">...</div></div>
-            <div class="row"><button id="inviteBtn"><i class="fas fa-share-alt"></i> إنشاء رابط دعوة</button></div>
+            <div class="row">
+                <div class="status" id="connectionStatus">...</div>
+                <div class="network-status" id="networkStatus" style="display: none;">
+                    <div class="network-dot" id="networkDot"></div>
+                    <span id="networkText">جودة الاتصال</span>
+                </div>
+            </div>
+            <div class="row">
+                <button id="inviteBtn">
+                    <i class="fas fa-share-alt"></i> إنشاء رابط دعوة
+                </button>
+            </div>
             <hr>
-            <div class="row"><input type="text" id="remotePeerIdInput" placeholder="الصق معرّف أو رابط الدعوة هنا" /></div>
-            <div class="row"><button id="connectBtn">اتصال بالخصم</button></div>
+            <div class="row">
+                <input type="text" id="remotePeerIdInput" placeholder="الصق معرّف أو رابط الدعوة هنا" />
+            </div>
+            <div class="row">
+                <button id="connectBtn">اتصال بالخصم</button>
+            </div>
+            <div class="row">
+                <button id="reconnectBtn" class="warning" style="display: none;">
+                    <i class="fas fa-refresh"></i> إعادة الاتصال
+                </button>
+            </div>
         </div>
 
         <div class="section">
             <h3 class="muted">أدوات التحكم</h3>
-            <div class="row"><button id="restartBtn"><i class="fas fa-redo"></i> إعادة اللعب</button></div>
-            <div class="row"><button id="newGameBtn" class="success"><i class="fas fa-plus"></i> جولة جديدة</button></div>
+            <div class="row">
+                <button id="restartBtn">
+                    <i class="fas fa-redo"></i> إعادة اللعب
+                </button>
+            </div>
+            <div class="row">
+                <button id="newGameBtn" class="success">
+                    <i class="fas fa-plus"></i> جولة جديدة
+                </button>
+            </div>
         </div>
 
         <div class="section">
             <h3 class="muted">النتائج</h3>
             <div class="score-board">
-                <div class="score-item"><div>X</div><div class="score-value" id="scoreX">0</div></div>
-                <div class="score-item"><div>تعادل</div><div class="score-value" id="scoreDraw">0</div></div>
-                <div class="score-item"><div>O</div><div class="score-value" id="scoreO">0</div></div>
+                <div class="score-item">
+                    <div>X</div>
+                    <div class="score-value" id="scoreX">0</div>
+                </div>
+                <div class="score-item">
+                    <div>تعادل</div>
+                    <div class="score-value" id="scoreDraw">0</div>
+                </div>
+                <div class="score-item">
+                    <div>O</div>
+                    <div class="score-value" id="scoreO">0</div>
+                </div>
             </div>
         </div>
     </div>
@@ -123,13 +647,15 @@
         <div id="timer" style="font-size: 1.2em; color: var(--muted-color); margin-top: 15px;">00:00</div>
     </div>
 
-    <!-- New Chat Panel -->
+    <!-- Chat Panel -->
     <div class="panel" id="chatSection" style="flex-basis: 100%;">
         <h3>الدردشة</h3>
         <div id="chatMessages"></div>
         <form id="chatForm" class="row">
             <input type="text" id="chatInput" placeholder="اكتب رسالتك..." autocomplete="off" />
-            <button type="submit" style="width: auto; padding: 10px 15px;"><i class="fas fa-paper-plane"></i></button>
+            <button type="submit" style="width: auto; padding: 10px 15px;">
+                <i class="fas fa-paper-plane"></i>
+            </button>
         </form>
     </div>
 </div>
@@ -153,6 +679,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const inviteBtn = document.getElementById('inviteBtn');
     const remotePeerIdInput = document.getElementById('remotePeerIdInput');
     const connectBtn = document.getElementById('connectBtn');
+    const reconnectBtn = document.getElementById('reconnectBtn');
     const chatSection = document.getElementById('chatSection');
     const chatMessages = document.getElementById('chatMessages');
     const chatForm = document.getElementById('chatForm');
@@ -160,6 +687,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalOverlay = document.getElementById('modalOverlay');
     const modalText = document.getElementById('modalText');
     const modalButtons = document.getElementById('modalButtons');
+    const networkStatus = document.getElementById('networkStatus');
+    const networkDot = document.getElementById('networkDot');
+    const networkText = document.getElementById('networkText');
+    const reconnectionBanner = document.getElementById('reconnectionBanner');
 
     // --- Game State ---
     let boardState = Array(9).fill(null);
@@ -174,17 +705,55 @@ document.addEventListener('DOMContentLoaded', () => {
     let peer = null;
     let conn = null;
     let myRole = '';
+    let reconnectAttempts = 0;
+    let maxReconnectAttempts = 5;
+    let connectionQuality = 'good';
+    let lastPingTime = 0;
+    let pingInterval = null;
+    let reconnectTimeout = null;
+    let isReconnecting = false;
+
+    // --- Message Queue for Reliability ---
+    let messageQueue = [];
+    let messageId = 0;
+    let acknowledgedMessages = new Set();
 
     // --- Sounds ---
     const sounds = {
-        move: new Audio('https://cdn.pixabay.com/download/audio/2021/08/04/audio_c483731958.mp3?filename=plunger-immediate-hit-155314.mp3'),
-        win: new Audio('https://cdn.pixabay.com/download/audio/2022/10/13/audio_73b1fcb72f.mp3?filename=success-fanfare-trumpets-6185.mp3'),
-        draw: new Audio('https://cdn.pixabay.com/download/audio/2022/03/10/audio_e5e39c459c.mp3?filename=negative_beeps-6008.mp3'),
-        click: new Audio('https://cdn.pixabay.com/download/audio/2022/03/15/audio_28b08a33a2.mp3?filename=mouse-click-153941.mp3')
+        move: new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmshBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2AQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a2/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBT2a');
+        win: createTone(523.25, 0.3), // C5
+        draw: createTone(261.63, 0.5), // C4
+        click: createTone(800, 0.1)
     };
-    function playSound(type) { if (sounds[type]) { sounds[type].currentTime = 0; sounds[type].play().catch(e => {}); } }
 
-    // --- UI & Modal Functions ---
+    function createTone(frequency, duration) {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const buffer = audioContext.createBuffer(1, audioContext.sampleRate * duration, audioContext.sampleRate);
+        const data = buffer.getChannelData(0);
+        
+        for (let i = 0; i < data.length; i++) {
+            data[i] = Math.sin(2 * Math.PI * frequency * i / audioContext.sampleRate) * 0.1;
+        }
+        
+        return {
+            play: () => {
+                const source = audioContext.createBufferSource();
+                source.buffer = buffer;
+                source.connect(audioContext.destination);
+                source.start();
+            },
+            currentTime: 0
+        };
+    }
+
+    function playSound(type) { 
+        if (sounds[type]) { 
+            sounds[type].currentTime = 0; 
+            sounds[type].play().catch(e => {}); 
+        } 
+    }
+
+    // --- Enhanced UI & Modal Functions ---
     function showModal(text, buttons) {
         modalText.textContent = text;
         modalButtons.innerHTML = '';
@@ -202,13 +771,72 @@ document.addEventListener('DOMContentLoaded', () => {
         modalOverlay.style.display = 'flex';
     }
 
-    function showTemporaryStatus(message, duration = 2000) {
+    function showTemporaryStatus(message, duration = 2000, type = 'info') {
         const originalText = gameStatus.textContent;
+        const originalBg = gameStatus.style.backgroundColor;
+        
         gameStatus.textContent = message;
-        setTimeout(() => { gameStatus.textContent = originalText; }, duration);
+        
+        // Set color based on type
+        switch(type) {
+            case 'success':
+                gameStatus.style.backgroundColor = 'rgba(76, 175, 80, 0.3)';
+                break;
+            case 'error':
+                gameStatus.style.backgroundColor = 'rgba(255, 68, 68, 0.3)';
+                break;
+            case 'warning':
+                gameStatus.style.backgroundColor = 'rgba(255, 152, 0, 0.3)';
+                break;
+            default:
+                gameStatus.style.backgroundColor = 'rgba(33, 150, 243, 0.3)';
+        }
+        
+        setTimeout(() => { 
+            gameStatus.textContent = originalText; 
+            gameStatus.style.backgroundColor = originalBg;
+        }, duration);
     }
 
-    // --- Game Logic ---
+    function updateConnectionStatus(status, message) {
+        connectionStatus.className = `status ${status}`;
+        connectionStatus.textContent = message;
+        
+        // Update network status indicator
+        if (status === 'connected') {
+            networkStatus.style.display = 'flex';
+            updateNetworkQuality('good');
+        } else {
+            networkStatus.style.display = 'none';
+        }
+    }
+
+    function updateNetworkQuality(quality) {
+        connectionQuality = quality;
+        networkDot.className = `network-dot ${quality}`;
+        
+        switch(quality) {
+            case 'good':
+                networkText.textContent = 'اتصال ممتاز';
+                break;
+            case 'medium':
+                networkText.textContent = 'اتصال متوسط';
+                break;
+            case 'bad':
+                networkText.textContent = 'اتصال ضعيف';
+                break;
+        }
+    }
+
+    function showReconnectionBanner(show) {
+        if (show) {
+            reconnectionBanner.classList.add('show');
+        } else {
+            reconnectionBanner.classList.remove('show');
+        }
+    }
+
+    // --- Enhanced Game Logic ---
     function createBoard() {
         gameBoard.innerHTML = '';
         for (let i = 0; i < 9; i++) {
@@ -218,6 +846,30 @@ document.addEventListener('DOMContentLoaded', () => {
             cell.addEventListener('click', handleCellClick);
             gameBoard.appendChild(cell);
         }
+        updateBoardVisuals();
+    }
+
+    function updateBoardVisuals() {
+        const cells = document.querySelectorAll('.cell');
+        cells.forEach(cell => {
+            cell.classList.remove('my-turn', 'opponent-turn');
+        });
+
+        if (gameMode === 'online' && gameActive && conn?.open) {
+            if (currentPlayer === myRole) {
+                cells.forEach(cell => {
+                    if (!cell.textContent) {
+                        cell.classList.add('my-turn');
+                    }
+                });
+            } else {
+                cells.forEach(cell => {
+                    if (!cell.textContent) {
+                        cell.classList.add('opponent-turn');
+                    }
+                });
+            }
+        }
     }
 
     function handleCellClick(event) {
@@ -225,31 +877,51 @@ document.addEventListener('DOMContentLoaded', () => {
         const index = parseInt(event.target.dataset.index, 10);
         if (boardState[index] !== null) return;
 
-        if (gameMode === 'online' && conn?.open && currentPlayer !== myRole) {
-            showTemporaryStatus("ليس دورك!");
-            return;
+        // Enhanced online mode validation
+        if (gameMode === 'online' && conn?.open) {
+            if (currentPlayer !== myRole) {
+                showTemporaryStatus("ليس دورك!", 1500, 'warning');
+                return;
+            }
+            
+            if (!conn.open) {
+                showTemporaryStatus("الاتصال منقطع!", 2000, 'error');
+                return;
+            }
         }
 
         makeMove(index, currentPlayer);
 
         if (gameMode === 'online' && conn?.open) {
-            // *** FIX 1: Send the current player's symbol with the move ***
-            sendNetworkMessage({ type: 'move', index: index, player: currentPlayer });
+            // Send move with enhanced data
+            const moveData = {
+                type: 'move',
+                index: index,
+                player: currentPlayer,
+                timestamp: Date.now(),
+                id: ++messageId
+            };
+            sendReliableMessage(moveData);
             lockBoard();
         } else if (gameMode === 'ai' && gameActive) {
             lockBoard();
             setTimeout(aiMove, 500);
         }
         
-        if (gameActive) togglePlayer();
+        if (gameActive) {
+            togglePlayer();
+            updateBoardVisuals();
+        }
     }
 
     function makeMove(index, player) {
         if (boardState[index] !== null) return;
+        
         playSound('move');
         boardState[index] = player;
-        document.querySelector(`.cell[data-index='${index}']`).textContent = player;
-        document.querySelector(`.cell[data-index='${index}']`).classList.add(player.toLowerCase());
+        const cell = document.querySelector(`.cell[data-index='${index}']`);
+        cell.textContent = player;
+        cell.classList.add(player.toLowerCase());
 
         if (checkWin(player)) {
             endGame(false, player);
@@ -265,38 +937,86 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateStatus() {
         if (!gameActive) return;
+        
         let statusText = `الدور على اللاعب: ${currentPlayer}`;
+        let statusColor = '';
+        
         if (gameMode === 'online' && conn?.open) {
-            statusText += (currentPlayer === myRole) ? " (أنت)" : " (الخصم)";
+            if (currentPlayer === myRole) {
+                statusText += " (أنت)";
+                statusColor = 'rgba(0, 170, 255, 0.2)';
+            } else {
+                statusText += " (الخصم)";
+                statusColor = 'rgba(255, 68, 68, 0.2)';
+            }
         } else if (gameMode === 'ai') {
             statusText = (currentPlayer === 'X') ? "دورك للعب" : "الكمبيوتر يفكر...";
+            statusColor = (currentPlayer === 'X') ? 'rgba(0, 170, 255, 0.2)' : 'rgba(255, 152, 0, 0.2)';
         }
+        
         gameStatus.textContent = statusText;
+        gameStatus.style.backgroundColor = statusColor;
     }
 
     function checkWin(player, board = boardState) {
-        const winConditions = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-        const winningCombination = winConditions.find(c => c.every(i => board[i] === player));
+        const winConditions = [
+            [0,1,2],[3,4,5],[6,7,8], // rows
+            [0,3,6],[1,4,7],[2,5,8], // columns
+            [0,4,8],[2,4,6] // diagonals
+        ];
+        
+        const winningCombination = winConditions.find(combination => 
+            combination.every(index => board[index] === player)
+        );
+        
         if (winningCombination && board === boardState) {
-            winningCombination.forEach(i => document.querySelector(`.cell[data-index='${i}']`).classList.add('win'));
+            winningCombination.forEach(index => 
+                document.querySelector(`.cell[data-index='${index}']`).classList.add('win')
+            );
         }
+        
         return !!winningCombination;
     }
 
     function endGame(isDraw, winner = null) {
         gameActive = false;
         clearInterval(gameTimer);
+        
         if (isDraw) {
             playSound('draw');
             gameStatus.textContent = 'انتهت اللعبة بالتعادل!';
+            gameStatus.style.backgroundColor = 'rgba(255, 193, 7, 0.3)';
             scores.draw++;
         } else {
             playSound('win');
-            gameStatus.textContent = `اللاعب ${winner} فاز!`;
+            let statusText = `اللاعب ${winner} فاز!`;
+            let statusColor = winner === 'X' ? 'rgba(0, 170, 255, 0.3)' : 'rgba(255, 68, 68, 0.3)';
+            
+            if (gameMode === 'online') {
+                if (winner === myRole) {
+                    statusText = `فزت! (${winner})`;
+                    createConfetti();
+                } else {
+                    statusText = `فاز الخصم (${winner})`;
+                }
+            } else if (gameMode === 'ai') {
+                if (winner === 'X') {
+                    statusText = 'فزت!';
+                    createConfetti();
+                } else {
+                    statusText = 'فاز الكمبيوتر!';
+                }
+            } else {
+                createConfetti();
+            }
+            
+            gameStatus.textContent = statusText;
+            gameStatus.style.backgroundColor = statusColor;
             scores[winner]++;
-            if (gameMode !== 'online' || winner === myRole) createConfetti();
         }
+        
         updateScores();
+        unlockBoard();
     }
 
     function startGame() {
@@ -311,28 +1031,74 @@ document.addEventListener('DOMContentLoaded', () => {
         gameTimer = setInterval(updateTimer, 1000);
         unlockBoard();
 
-        if (gameMode === 'online') {
+        if (gameMode === 'online' && conn?.open) {
             chatSection.style.display = 'block';
-            if (myRole === 'X') { gameStatus.textContent = "دورك للعب (X)"; } 
-            else { lockBoard(); gameStatus.textContent = "في انتظار حركة الخصم (O)"; }
+            if (myRole === 'X') { 
+                gameStatus.textContent = "دورك للعب (X)";
+                gameStatus.style.backgroundColor = 'rgba(0, 170, 255, 0.2)';
+            } else { 
+                lockBoard(); 
+                gameStatus.textContent = "في انتظار حركة الخصم (O)";
+                gameStatus.style.backgroundColor = 'rgba(255, 68, 68, 0.2)';
+            }
         } else {
             chatSection.style.display = 'none';
+            gameStatus.style.backgroundColor = 'rgba(0,0,0,0.2)';
+        }
+        
+        updateBoardVisuals();
+    }
+
+    function updateTimer() { 
+        timeElapsed++; 
+        const minutes = Math.floor(timeElapsed/60).toString().padStart(2,'0');
+        const seconds = (timeElapsed%60).toString().padStart(2,'0');
+        timerDisplay.textContent = `${minutes}:${seconds}`;
+    }
+
+    function updateScores() { 
+        scoreX.textContent = scores.X; 
+        scoreO.textContent = scores.O; 
+        scoreDraw.textContent = scores.draw; 
+        if (gameMode !== 'online') {
+            localStorage.setItem('xoScores', JSON.stringify(scores));
         }
     }
 
-    function updateTimer() { timeElapsed++; timerDisplay.textContent = `${Math.floor(timeElapsed/60).toString().padStart(2,'0')}:${(timeElapsed%60).toString().padStart(2,'0')}`; }
-    function updateScores() { scoreX.textContent = scores.X; scoreO.textContent = scores.O; scoreDraw.textContent = scores.draw; if (gameMode !== 'online') localStorage.setItem('xoScores', JSON.stringify(scores)); }
-    function resetScores() { scores = { X: 0, O: 0, draw: 0 }; updateScores(); }
-    function lockBoard() { gameBoard.classList.add('board-locked'); }
-    function unlockBoard() { gameBoard.classList.remove('board-locked'); }
-    function createConfetti() { for (let i = 0; i < 50; i++) { const c = document.createElement('div'); c.className = 'confetti'; c.style.left = Math.random()*100+'vw'; c.style.animationDelay = Math.random()*-3+'s'; c.style.backgroundColor = `hsl(${Math.random()*360},100%,50%)`; confettiContainer.appendChild(c); setTimeout(()=>c.remove(),3000); } }
+    function resetScores() { 
+        scores = { X: 0, O: 0, draw: 0 }; 
+        updateScores(); 
+    }
 
-    // --- AI Logic (Minimax) ---
+    function lockBoard() { 
+        gameBoard.classList.add('board-locked'); 
+    }
+
+    function unlockBoard() { 
+        gameBoard.classList.remove('board-locked'); 
+    }
+
+    function createConfetti() { 
+        for (let i = 0; i < 50; i++) { 
+            const confetti = document.createElement('div'); 
+            confetti.className = 'confetti'; 
+            confetti.style.left = Math.random()*100+'vw'; 
+            confetti.style.animationDelay = Math.random()*-3+'s'; 
+            confetti.style.backgroundColor = `hsl(${Math.random()*360},100%,50%)`; 
+            confettiContainer.appendChild(confetti); 
+            setTimeout(() => confetti.remove(), 3000); 
+        } 
+    }
+
+    // --- Enhanced AI Logic (Minimax) ---
     function aiMove() {
         const bestMove = findBestMove(boardState);
         if (bestMove !== -1) {
             makeMove(bestMove, 'O');
-            if (gameActive) togglePlayer();
+            if (gameActive) {
+                togglePlayer();
+                updateBoardVisuals();
+            }
         }
         unlockBoard();
     }
@@ -340,11 +1106,13 @@ document.addEventListener('DOMContentLoaded', () => {
     function findBestMove(board) {
         let bestVal = -1000;
         let bestMove = -1;
+        
         for (let i = 0; i < 9; i++) {
             if (board[i] === null) {
                 board[i] = 'O';
                 let moveVal = minimax(board, 0, false);
                 board[i] = null;
+                
                 if (moveVal > bestVal) {
                     bestMove = i;
                     bestVal = moveVal;
@@ -356,6 +1124,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function minimax(board, depth, isMax) {
         const score = evaluate(board);
+        
         if (score === 10) return score - depth;
         if (score === -10) return score + depth;
         if (board.every(cell => cell !== null)) return 0;
@@ -383,147 +1152,484 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function evaluate(b) {
-        if (checkWin('O', b)) return 10;
-        if (checkWin('X', b)) return -10;
+    function evaluate(board) {
+        if (checkWin('O', board)) return 10;
+        if (checkWin('X', board)) return -10;
         return 0;
     }
 
-    // --- Network & Chat Logic ---
+    // --- Enhanced Network & Reliability Functions ---
     function handleGameModeChange() {
         gameMode = gameModeSelect.value;
         onlineSection.style.display = (gameMode === 'online') ? 'block' : 'none';
         chatSection.style.display = 'none';
         resetScores();
+        
+        // Clean up existing connections
+        cleanupConnection();
+        
         if (gameMode !== 'online') {
-            if (peer) peer.destroy();
             const savedScores = localStorage.getItem('xoScores');
-            if (savedScores) scores = JSON.parse(savedScores);
+            if (savedScores) {
+                scores = JSON.parse(savedScores);
+            }
             updateScores();
         } else {
-            if (!peer || peer.destroyed) initializePeer();
+            if (!peer || peer.destroyed) {
+                initializePeer();
+            }
         }
+        
         startGame();
+    }
+
+    function cleanupConnection() {
+        if (pingInterval) {
+            clearInterval(pingInterval);
+            pingInterval = null;
+        }
+        
+        if (reconnectTimeout) {
+            clearTimeout(reconnectTimeout);
+            reconnectTimeout = null;
+        }
+        
+        showReconnectionBanner(false);
+        isReconnecting = false;
+        reconnectAttempts = 0;
+        
+        if (conn) {
+            conn.close();
+            conn = null;
+        }
+        
+        if (peer && !peer.destroyed) {
+            peer.destroy();
+        }
+        
+        messageQueue = [];
+        acknowledgedMessages.clear();
     }
 
     function initializePeer() {
         if (peer) peer.destroy();
-        peer = new Peer();
-        peer.on('open', id => { connectionStatus.textContent = 'جاهز للاتصال'; });
+        
+        peer = new Peer({
+            config: {
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:stun1.l.google.com:19302' }
+                ]
+            }
+        });
+        
+        peer.on('open', id => { 
+            updateConnectionStatus('waiting', 'جاهز للاتصال');
+            console.log('Peer ID:', id);
+        });
+        
         peer.on('connection', newConn => {
-            if (conn?.open) { newConn.close(); return; }
+            if (conn?.open) {
+                newConn.close();
+                return;
+            }
+            
             conn = newConn;
-            myRole = 'O';
+            myRole = 'O'; // الشخص الذي يستقبل الاتصال يكون O
             setupConnectionHandlers();
         });
-        peer.on('error', err => { connectionStatus.textContent = `خطأ: ${err.type}`; });
+        
+        peer.on('error', err => { 
+            console.error('Peer error:', err);
+            updateConnectionStatus('error', `خطأ: ${err.type}`);
+            
+            if (err.type === 'network') {
+                attemptReconnection();
+            }
+        });
+        
+        peer.on('disconnected', () => {
+            updateConnectionStatus('error', 'انقطع الاتصال');
+            attemptReconnection();
+        });
     }
 
     function connectToPeer() {
         let remoteId = remotePeerIdInput.value.trim();
-        try { const url = new URL(remoteId); remoteId = url.searchParams.get('join'); } catch (e) {}
-        if (!remoteId) { showModal("الرجاء إدخال معرّف أو رابط دعوة صحيح.", [{ text: "موافق", action: () => {} }]); return; }
-        conn = peer.connect(remoteId, { reliable: true });
-        myRole = 'X';
+        
+        // Extract ID from invite link if provided
+        try { 
+            const url = new URL(remoteId); 
+            remoteId = url.searchParams.get('join'); 
+        } catch (e) {}
+        
+        if (!remoteId) { 
+            showModal("الرجاء إدخال معرّف أو رابط دعوة صحيح.", [
+                { text: "موافق", action: () => {} }
+            ]); 
+            return; 
+        }
+        
+        updateConnectionStatus('connecting', 'جارٍ الاتصال...');
+        connectBtn.disabled = true;
+        
+        conn = peer.connect(remoteId, { 
+            reliable: true,
+            serialization: 'json'
+        });
+        
+        myRole = 'X'; // الشخص الذي يبدأ الاتصال يكون X
         setupConnectionHandlers();
+        
+        // Timeout for connection attempt
+        setTimeout(() => {
+            if (conn && !conn.open) {
+                updateConnectionStatus('error', 'فشل الاتصال - انتهت المهلة');
+                connectBtn.disabled = false;
+            }
+        }, 10000);
     }
 
     function setupConnectionHandlers() {
         conn.on('open', () => {
-            connectionStatus.textContent = `متصل باللاعب`;
+            updateConnectionStatus('connected', `متصل باللاعب`);
             remotePeerIdInput.disabled = true;
             connectBtn.disabled = true;
+            reconnectBtn.style.display = 'none';
+            reconnectAttempts = 0;
+            isReconnecting = false;
+            showReconnectionBanner(false);
+            
             resetScores();
             startGame();
+            startPingMonitoring();
+            
+            // Send initial handshake
+            sendReliableMessage({
+                type: 'handshake',
+                role: myRole,
+                timestamp: Date.now()
+            });
         });
+        
         conn.on('data', handleNetworkMessage);
+        
         conn.on('close', () => {
-            showModal("انقطع الاتصال بالخصم.", [{ text: "موافق", action: () => { handleGameModeChange(); } }]);
+            updateConnectionStatus('error', 'انقطع الاتصال بالخصم');
+            stopPingMonitoring();
+            attemptReconnection();
+        });
+        
+        conn.on('error', (err) => {
+            console.error('Connection error:', err);
+            updateConnectionStatus('error', 'خطأ في الاتصال');
         });
     }
 
-    function sendNetworkMessage(data) { if (conn?.open) conn.send(data); }
+    function sendReliableMessage(data) {
+        if (!conn?.open) return false;
+        
+        try {
+            // Add to queue for potential resend
+            if (data.type !== 'ping' && data.type !== 'pong' && data.type !== 'ack') {
+                messageQueue.push({...data, sent: Date.now()});
+            }
+            
+            conn.send(data);
+            return true;
+        } catch (error) {
+            console.error('Failed to send message:', error);
+            return false;
+        }
+    }
 
     function handleNetworkMessage(msg) {
+        // Send acknowledgment for important messages
+        if (msg.id && msg.type !== 'ping' && msg.type !== 'pong' && msg.type !== 'ack') {
+            sendReliableMessage({
+                type: 'ack',
+                messageId: msg.id,
+                timestamp: Date.now()
+            });
+        }
+        
         switch (msg.type) {
-            case 'move':
-                // *** FIX 2: Use the player symbol received in the message ***
-                makeMove(msg.index, msg.player);
-                if (gameActive) togglePlayer();
-                unlockBoard();
+            case 'handshake':
+                console.log('Received handshake from opponent');
                 break;
+                
+            case 'move':
+                // التحقق من صحة الحركة
+                if (msg.player && msg.index !== undefined) {
+                    makeMove(msg.index, msg.player);
+                    if (gameActive) {
+                        togglePlayer();
+                        updateBoardVisuals();
+                    }
+                    unlockBoard();
+                }
+                break;
+                
             case 'restart_request':
                 showModal("الخصم يريد بدء لعبة جديدة. هل توافق؟", [
-                    { text: "نعم", class: "success", action: () => { sendNetworkMessage({ type: 'restart_confirm' }); startGame(); }},
-                    { text: "لا", class: "secondary", action: () => {} }
+                    { 
+                        text: "نعم", 
+                        class: "success", 
+                        action: () => { 
+                            sendReliableMessage({ type: 'restart_confirm' }); 
+                            startGame(); 
+                        }
+                    },
+                    { 
+                        text: "لا", 
+                        class: "secondary", 
+                        action: () => {
+                            sendReliableMessage({ type: 'restart_declined' });
+                        } 
+                    }
                 ]);
                 break;
+                
             case 'restart_confirm':
-                showTemporaryStatus("وافق الخصم على بدء لعبة جديدة.");
+                showTemporaryStatus("وافق الخصم على بدء لعبة جديدة.", 2000, 'success');
                 startGame();
                 break;
+                
+            case 'restart_declined':
+                showTemporaryStatus("رفض الخصم بدء لعبة جديدة.", 2000, 'warning');
+                break;
+                
             case 'chat':
-                addChatMessage(msg.message, 'opponent');
+                if (msg.message) {
+                    addChatMessage(msg.message, 'opponent');
+                }
+                break;
+                
+            case 'ping':
+                sendReliableMessage({
+                    type: 'pong',
+                    timestamp: Date.now(),
+                    originalTimestamp: msg.timestamp
+                });
+                break;
+                
+            case 'pong':
+                const latency = Date.now() - msg.originalTimestamp;
+                updateNetworkQuality(getQualityFromLatency(latency));
+                break;
+                
+            case 'ack':
+                acknowledgedMessages.add(msg.messageId);
                 break;
         }
+    }
+
+    function getQualityFromLatency(latency) {
+        if (latency < 100) return 'good';
+        if (latency < 300) return 'medium';
+        return 'bad';
+    }
+
+    function startPingMonitoring() {
+        pingInterval = setInterval(() => {
+            if (conn?.open) {
+                lastPingTime = Date.now();
+                sendReliableMessage({
+                    type: 'ping',
+                    timestamp: lastPingTime
+                });
+                
+                // Check for connection timeout
+                setTimeout(() => {
+                    if (Date.now() - lastPingTime > 5000) {
+                        updateNetworkQuality('bad');
+                    }
+                }, 5000);
+            }
+        }, 3000);
+    }
+
+    function stopPingMonitoring() {
+        if (pingInterval) {
+            clearInterval(pingInterval);
+            pingInterval = null;
+        }
+    }
+
+    function attemptReconnection() {
+        if (isReconnecting || reconnectAttempts >= maxReconnectAttempts) {
+            return;
+        }
+        
+        isReconnecting = true;
+        reconnectAttempts++;
+        showReconnectionBanner(true);
+        reconnectBtn.style.display = 'block';
+        
+        const delay = Math.min(1000 * Math.pow(2, reconnectAttempts - 1), 10000);
+        
+        reconnectTimeout = setTimeout(() => {
+            if (peer && !peer.destroyed && remotePeerIdInput.value) {
+                connectToPeer();
+            }
+        }, delay);
     }
 
     function addChatMessage(message, senderType) {
         const msgDiv = document.createElement('div');
         msgDiv.className = `chat-message ${senderType}`;
-        msgDiv.textContent = message;
+        
+        const timestamp = new Date().toLocaleTimeString('ar', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+        
+        msgDiv.innerHTML = `
+            <div class="sender">${senderType === 'me' ? 'أنت' : 'الخصم'} (${timestamp})</div>
+            <div>${message}</div>
+        `;
+        
         chatMessages.appendChild(msgDiv);
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
-    // --- Event Listeners ---
-    gameModeSelect.addEventListener('change', () => { playSound('click'); handleGameModeChange(); });
-    connectBtn.addEventListener('click', () => { playSound('click'); connectToPeer(); });
+    // --- Enhanced Event Listeners ---
+    gameModeSelect.addEventListener('change', () => { 
+        playSound('click'); 
+        handleGameModeChange(); 
+    });
+    
+    connectBtn.addEventListener('click', () => { 
+        playSound('click'); 
+        connectToPeer(); 
+    });
+    
+    reconnectBtn.addEventListener('click', () => {
+        playSound('click');
+        reconnectAttempts = 0;
+        isReconnecting = false;
+        showReconnectionBanner(false);
+        connectToPeer();
+    });
+    
     inviteBtn.addEventListener('click', () => {
         playSound('click');
         if (peer && peer.id) {
             const inviteLink = `${window.location.origin}${window.location.pathname}?join=${peer.id}`;
-            navigator.clipboard.writeText(inviteLink).then(() => {
-                showModal("تم نسخ رابط الدعوة!", [{ text: "رائع!", action: () => {} }]);
-            });
+            
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(inviteLink).then(() => {
+                    showModal("تم نسخ رابط الدعوة! شاركه مع صديقك للعب معاً.", [
+                        { text: "رائع!", action: () => {} }
+                    ]);
+                }).catch(() => {
+                    showInviteLink(inviteLink);
+                });
+            } else {
+                showInviteLink(inviteLink);
+            }
         } else {
-            showModal("لا يمكن إنشاء رابط دعوة. هل أنت متصل بالإنترنت؟", [{ text: "موافق", action: () => {} }]);
+            showModal("لا يمكن إنشاء رابط دعوة. تأكد من الاتصال بالإنترنت.", [
+                { text: "موافق", action: () => {} }
+            ]);
         }
     });
+    
+    function showInviteLink(link) {
+        showModal(`انسخ هذا الرابط وشاركه:\n${link}`, [
+            { text: "موافق", action: () => {} }
+        ]);
+    }
+    
     restartBtn.addEventListener('click', () => {
         playSound('click');
         if (gameMode === 'online' && conn?.open) {
-            sendNetworkMessage({ type: 'restart_request' });
-            showTemporaryStatus("تم إرسال طلب إعادة اللعب...");
+            sendReliableMessage({ 
+                type: 'restart_request',
+                timestamp: Date.now(),
+                id: ++messageId
+            });
+            showTemporaryStatus("تم إرسال طلب إعادة اللعب...", 2000, 'info');
         } else {
             startGame();
         }
     });
+    
     newGameBtn.addEventListener('click', () => {
         playSound('click');
         showModal("هل تريد بدء جولة جديدة؟ سيتم إعادة تعيين النتائج.", [
-            { text: "نعم", class: "success", action: () => { resetScores(); startGame(); }},
-            { text: "لا", class: "secondary", action: () => {} }
+            { 
+                text: "نعم", 
+                class: "success", 
+                action: () => { 
+                    resetScores(); 
+                    startGame(); 
+                }
+            },
+            { 
+                text: "لا", 
+                class: "secondary", 
+                action: () => {} 
+            }
         ]);
     });
+    
     chatForm.addEventListener('submit', e => {
         e.preventDefault();
         const message = chatInput.value.trim();
-        if (message) {
+        if (message && conn?.open) {
             addChatMessage(message, 'me');
-            sendNetworkMessage({ type: 'chat', message: message });
+            sendReliableMessage({ 
+                type: 'chat', 
+                message: message,
+                timestamp: Date.now(),
+                id: ++messageId
+            });
             chatInput.value = '';
         }
     });
 
-    // --- Initial Load ---
+    // Close modal when clicking outside
+    modalOverlay.addEventListener('click', (e) => {
+        if (e.target === modalOverlay) {
+            modalOverlay.style.display = 'none';
+        }
+    });
+
+    // --- Enhanced Initial Load ---
     const urlParams = new URLSearchParams(window.location.search);
     const joinId = urlParams.get('join');
+    
     if (joinId) {
         gameModeSelect.value = 'online';
         remotePeerIdInput.value = joinId;
+        showTemporaryStatus("تم العثور على دعوة! اضغط 'اتصال بالخصم' للانضمام.", 3000, 'info');
     }
+    
+    // Load saved scores
+    const savedScores = localStorage.getItem('xoScores');
+    if (savedScores) {
+        scores = JSON.parse(savedScores);
+        updateScores();
+    }
+    
     handleGameModeChange();
+    
+    // Add visibility change handler for better connection management
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden && gameMode === 'online') {
+            // Page hidden - stop ping monitoring to save resources
+            stopPingMonitoring();
+        } else if (!document.hidden && gameMode === 'online' && conn?.open) {
+            // Page visible again - resume ping monitoring
+            startPingMonitoring();
+        }
+    });
+    
+    // Add beforeunload handler
+    window.addEventListener('beforeunload', () => {
+        cleanupConnection();
+    });
 });
 </script>
 </body>
