@@ -357,7 +357,7 @@
             animation: fall 3s linear forwards; 
         }
         
-        /* Chat Styles */
+        /* Chat & Voice Controls */
         #chatMessages { 
             height: 150px; 
             overflow-y: auto; 
@@ -400,6 +400,95 @@
             font-size: 0.7em;
             opacity: 0.6;
             margin-top: 2px;
+        }
+        
+        /* Voice Chat Controls */
+        .voice-controls {
+            background-color: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .voice-status {
+            text-align: center;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 4px;
+            background-color: rgba(0,0,0,0.3);
+        }
+        
+        .voice-status.active {
+            color: var(--success);
+            background-color: rgba(76, 175, 80, 0.2);
+        }
+        
+        .voice-status.muted {
+            color: var(--warning);
+            background-color: rgba(255, 152, 0, 0.2);
+        }
+        
+        .voice-status.error {
+            color: var(--secondary);
+            background-color: rgba(255, 68, 68, 0.2);
+        }
+        
+        .voice-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .voice-buttons button {
+            flex: 1;
+            min-width: 120px;
+            padding: 12px;
+            font-size: 0.9em;
+        }
+        
+        .mute-btn {
+            position: relative;
+        }
+        
+        .mute-btn.muted {
+            background-color: var(--secondary) !important;
+        }
+        
+        .mute-btn:not(.muted) {
+            background-color: var(--success) !important;
+        }
+        
+        .volume-indicator {
+            height: 4px;
+            background-color: var(--muted-color);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        
+        .volume-level {
+            height: 100%;
+            background-color: var(--success);
+            transition: width 0.1s ease;
+            border-radius: 2px;
+        }
+        
+        .audio-visualizer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            margin-top: 10px;
+            height: 30px;
+        }
+        
+        .audio-bar {
+            width: 3px;
+            background-color: var(--primary);
+            border-radius: 2px;
+            transition: height 0.1s ease;
         }
         
         /* Modal Styles */
@@ -532,6 +621,14 @@
             .cell {
                 font-size: 2.5em;
             }
+            
+            .voice-buttons {
+                flex-direction: column;
+            }
+            
+            .voice-buttons button {
+                min-width: 100%;
+            }
         }
     </style>
 </head>
@@ -625,14 +722,48 @@
     </div>
 
     <div class="panel" id="chatSection" style="flex-basis: 100%;">
-        <h3>الدردشة</h3>
-        <div id="chatMessages"></div>
-        <form id="chatForm" class="row">
-            <input type="text" id="chatInput" placeholder="اكتب رسالتك..." autocomplete="off" />
-            <button type="submit" style="width: auto; padding: 10px 15px;">
-                <i class="fas fa-paper-plane"></i>
-            </button>
-        </form>
+        <h3>التواصل</h3>
+        
+        <!-- Voice Chat Controls -->
+        <div class="voice-controls" id="voiceControls">
+            <div class="voice-status" id="voiceStatus">المكالمة الصوتية غير متاحة</div>
+            
+            <div class="voice-buttons">
+                <button id="startVoiceBtn" class="success">
+                    <i class="fas fa-microphone"></i> بدء المكالمة
+                </button>
+                <button id="muteBtn" class="mute-btn" style="display: none;">
+                    <i class="fas fa-microphone"></i> كتم الصوت
+                </button>
+                <button id="endVoiceBtn" class="secondary" style="display: none;">
+                    <i class="fas fa-phone-slash"></i> إنهاء المكالمة
+                </button>
+            </div>
+            
+            <div class="volume-indicator">
+                <div class="volume-level" id="volumeLevel"></div>
+            </div>
+            
+            <div class="audio-visualizer" id="audioVisualizer">
+                <div class="audio-bar"></div>
+                <div class="audio-bar"></div>
+                <div class="audio-bar"></div>
+                <div class="audio-bar"></div>
+                <div class="audio-bar"></div>
+            </div>
+        </div>
+        
+        <!-- Text Chat -->
+        <div>
+            <h4 style="margin: 15px 0 10px 0; color: var(--muted-color);">الدردشة النصية</h4>
+            <div id="chatMessages"></div>
+            <form id="chatForm" class="row">
+                <input type="text" id="chatInput" placeholder="اكتب رسالتك..." autocomplete="off" />
+                <button type="submit" style="width: auto; padding: 10px 15px;">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
     </div>
 </div>
 
@@ -663,6 +794,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalOverlay = document.getElementById('modalOverlay');
     const modalText = document.getElementById('modalText');
     const modalButtons = document.getElementById('modalButtons');
+    
+    // Voice chat elements
+    const voiceControls = document.getElementById('voiceControls');
+    const voiceStatus = document.getElementById('voiceStatus');
+    const startVoiceBtn = document.getElementById('startVoiceBtn');
+    const muteBtn = document.getElementById('muteBtn');
+    const endVoiceBtn = document.getElementById('endVoiceBtn');
+    const volumeLevel = document.getElementById('volumeLevel');
+    const audioVisualizer = document.getElementById('audioVisualizer');
 
     // --- Game State ---
     let boardState = Array(9).fill(null);
@@ -672,7 +812,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let scores = { X: 0, O: 0, draw: 0 };
     let gameTimer = null;
     let timeElapsed = 0;
-    let gameCount = 0; // للتأكد من تزامن الألعاب
+    let gameCount = 0;
 
     // --- Network State ---
     let peer = null;
@@ -681,46 +821,289 @@ document.addEventListener('DOMContentLoaded', () => {
     let isConnected = false;
     let connectionTimeout = null;
 
+    // --- Voice Chat State ---
+    let localStream = null;
+    let remoteStream = null;
+    let call = null;
+    let isMuted = false;
+    let isVoiceActive = false;
+    let audioContext = null;
+    let analyser = null;
+    let microphone = null;
+    let volumeCheckInterval = null;
+
+    // --- Audio Elements ---
+    const remoteAudio = new Audio();
+    remoteAudio.autoplay = true;
+    remoteAudio.volume = 1.0;
+
     // --- Sounds with fallback ---
     const sounds = {
         move: createBeep(800, 0.1),
         win: createBeep(523.25, 0.3),
         draw: createBeep(261.63, 0.5),
-        click: createBeep(1000, 0.05)
+        click: createBeep(1000, 0.05),
+        voiceStart: createBeep(440, 0.2),
+        voiceEnd: createBeep(220, 0.3)
     };
 
     function createBeep(frequency, duration) {
         return {
             play: () => {
                 try {
-                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                    const oscillator = audioContext.createOscillator();
-                    const gainNode = audioContext.createGain();
+                    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioCtx.createOscillator();
+                    const gainNode = audioCtx.createGain();
                     
                     oscillator.connect(gainNode);
-                    gainNode.connect(audioContext.destination);
+                    gainNode.connect(audioCtx.destination);
                     
                     oscillator.frequency.value = frequency;
                     oscillator.type = 'sine';
                     
-                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+                    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
                     
-                    oscillator.start(audioContext.currentTime);
-                    oscillator.stop(audioContext.currentTime + duration);
+                    oscillator.start(audioCtx.currentTime);
+                    oscillator.stop(audioCtx.currentTime + duration);
                 } catch (e) {
                     console.log('Audio not supported');
                 }
-            },
-            currentTime: 0
+            }
         };
     }
 
     function playSound(type) { 
         if (sounds[type]) { 
-            sounds[type].currentTime = 0; 
             sounds[type].play(); 
         } 
+    }
+
+    // --- Voice Chat Functions ---
+    async function initializeVoiceChat() {
+        try {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                throw new Error('Voice chat not supported');
+            }
+
+            voiceStatus.textContent = 'جاهز للمكالمة الصوتية';
+            voiceStatus.className = 'voice-status';
+            startVoiceBtn.style.display = 'block';
+            
+        } catch (error) {
+            console.error('Voice chat initialization failed:', error);
+            voiceStatus.textContent = 'المكالمة الصوتية غير متاحة';
+            voiceStatus.className = 'voice-status error';
+        }
+    }
+
+    async function startVoiceCall() {
+        try {
+            voiceStatus.textContent = 'جارٍ بدء المكالمة...';
+            voiceStatus.className = 'voice-status connecting';
+            
+            localStream = await navigator.mediaDevices.getUserMedia({ 
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    sampleRate: 44100
+                } 
+            });
+
+            setupAudioAnalyzer();
+            
+            if (conn && conn.open) {
+                // Send voice call request
+                sendNetworkMessage({ 
+                    type: 'voice_call_request',
+                    timestamp: Date.now()
+                });
+                
+                voiceStatus.textContent = 'في انتظار موافقة الخصم...';
+                voiceStatus.className = 'voice-status connecting';
+            } else {
+                throw new Error('No connection available');
+            }
+            
+        } catch (error) {
+            console.error('Failed to start voice call:', error);
+            voiceStatus.textContent = 'فشل في بدء المكالمة';
+            voiceStatus.className = 'voice-status error';
+            
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
+        }
+    }
+
+    function setupAudioAnalyzer() {
+        try {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            analyser = audioContext.createAnalyser();
+            microphone = audioContext.createMediaStreamSource(localStream);
+            
+            analyser.fftSize = 256;
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            
+            microphone.connect(analyser);
+            
+            // Start volume monitoring
+            volumeCheckInterval = setInterval(() => {
+                analyser.getByteFrequencyData(dataArray);
+                const average = dataArray.reduce((a, b) => a + b) / bufferLength;
+                const volume = (average / 255) * 100;
+                
+                volumeLevel.style.width = volume + '%';
+                updateAudioVisualizer(dataArray);
+            }, 100);
+            
+        } catch (error) {
+            console.error('Audio analyzer setup failed:', error);
+        }
+    }
+
+    function updateAudioVisualizer(dataArray) {
+        const bars = audioVisualizer.querySelectorAll('.audio-bar');
+        const step = Math.floor(dataArray.length / bars.length);
+        
+        bars.forEach((bar, index) => {
+            const value = dataArray[index * step] || 0;
+            const height = Math.max(2, (value / 255) * 30);
+            bar.style.height = height + 'px';
+        });
+    }
+
+    function acceptVoiceCall() {
+        if (peer && localStream) {
+            call = peer.call(conn.peer, localStream);
+            setupCallHandlers();
+            
+            voiceStatus.textContent = 'المكالمة نشطة';
+            voiceStatus.className = 'voice-status active';
+            updateVoiceButtons(true);
+            isVoiceActive = true;
+            
+            playSound('voiceStart');
+        }
+    }
+
+    function setupCallHandlers() {
+        if (!call) return;
+        
+        call.on('stream', (stream) => {
+            remoteStream = stream;
+            remoteAudio.srcObject = stream;
+            
+            voiceStatus.textContent = 'المكالمة نشطة';
+            voiceStatus.className = 'voice-status active';
+            updateVoiceButtons(true);
+            isVoiceActive = true;
+        });
+        
+        call.on('close', () => {
+            endVoiceCall();
+        });
+        
+        call.on('error', (error) => {
+            console.error('Call error:', error);
+            voiceStatus.textContent = 'خطأ في المكالمة';
+            voiceStatus.className = 'voice-status error';
+            endVoiceCall();
+        });
+    }
+
+    function toggleMute() {
+        if (!localStream) return;
+        
+        isMuted = !isMuted;
+        localStream.getAudioTracks().forEach(track => {
+            track.enabled = !isMuted;
+        });
+        
+        muteBtn.classList.toggle('muted', isMuted);
+        muteBtn.innerHTML = isMuted ? 
+            '<i class="fas fa-microphone-slash"></i> إلغاء الكتم' : 
+            '<i class="fas fa-microphone"></i> كتم الصوت';
+        
+        voiceStatus.textContent = isMuted ? 'المكالمة نشطة (مكتوم)' : 'المكالمة نشطة';
+        voiceStatus.className = isMuted ? 'voice-status muted' : 'voice-status active';
+        
+        // Send mute status to peer
+        sendNetworkMessage({
+            type: 'voice_mute_status',
+            isMuted: isMuted,
+            timestamp: Date.now()
+        });
+    }
+
+    function endVoiceCall() {
+        isVoiceActive = false;
+        isMuted = false;
+        
+        if (volumeCheckInterval) {
+            clearInterval(volumeCheckInterval);
+            volumeCheckInterval = null;
+        }
+        
+        if (localStream) {
+            localStream.getTracks().forEach(track => track.stop());
+            localStream = null;
+        }
+        
+        if (remoteStream) {
+            remoteStream.getTracks().forEach(track => track.stop());
+            remoteStream = null;
+        }
+        
+        if (call) {
+            call.close();
+            call = null;
+        }
+        
+        if (audioContext) {
+            audioContext.close();
+            audioContext = null;
+        }
+        
+        remoteAudio.srcObject = null;
+        
+        voiceStatus.textContent = 'تم إنهاء المكالمة';
+        voiceStatus.className = 'voice-status';
+        updateVoiceButtons(false);
+        
+        volumeLevel.style.width = '0%';
+        const bars = audioVisualizer.querySelectorAll('.audio-bar');
+        bars.forEach(bar => bar.style.height = '2px');
+        
+        playSound('voiceEnd');
+        
+        // Notify peer
+        sendNetworkMessage({
+            type: 'voice_call_ended',
+            timestamp: Date.now()
+        });
+        
+        setTimeout(() => {
+            if (!isVoiceActive) {
+                voiceStatus.textContent = 'جاهز للمكالمة الصوتية';
+            }
+        }, 2000);
+    }
+
+    function updateVoiceButtons(isActive) {
+        if (isActive) {
+            startVoiceBtn.style.display = 'none';
+            muteBtn.style.display = 'block';
+            endVoiceBtn.style.display = 'block';
+        } else {
+            startVoiceBtn.style.display = 'block';
+            muteBtn.style.display = 'none';
+            endVoiceBtn.style.display = 'none';
+            muteBtn.classList.remove('muted');
+            muteBtn.innerHTML = '<i class="fas fa-microphone"></i> كتم الصوت';
+        }
     }
 
     // --- Enhanced UI & Modal Functions ---
@@ -747,7 +1130,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         gameStatus.textContent = message;
         
-        // Set background color based on type
         switch(type) {
             case 'success':
                 gameStatus.style.backgroundColor = 'rgba(76, 175, 80, 0.3)';
@@ -774,17 +1156,25 @@ document.addEventListener('DOMContentLoaded', () => {
         connectionStatus.className = `status ${status}`;
         connectionStatus.innerHTML = `${message} <div class="status-indicator"></div>`;
         
-        // Update button states
         if (status === 'connected') {
             isConnected = true;
             connectBtn.style.display = 'none';
             disconnectBtn.style.display = 'block';
             remotePeerIdInput.disabled = true;
+            initializeVoiceChat();
         } else {
             isConnected = false;
             connectBtn.style.display = 'block';
             disconnectBtn.style.display = 'none';
             remotePeerIdInput.disabled = false;
+            
+            if (isVoiceActive) {
+                endVoiceCall();
+            }
+            
+            voiceStatus.textContent = 'المكالمة الصوتية غير متاحة';
+            voiceStatus.className = 'voice-status error';
+            updateVoiceButtons(false);
         }
     }
 
@@ -829,7 +1219,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const index = parseInt(event.target.dataset.index, 10);
         if (boardState[index] !== null) return;
 
-        // Enhanced validation for online mode
         if (gameMode === 'online') {
             if (!isConnected) {
                 showTemporaryStatus("غير متصل بالخصم!", 1500, 'error');
@@ -845,7 +1234,6 @@ document.addEventListener('DOMContentLoaded', () => {
         makeMove(index, currentPlayer);
 
         if (gameMode === 'online' && isConnected) {
-            // Send move with game count for synchronization
             sendNetworkMessage({ 
                 type: 'move', 
                 index: index, 
@@ -973,7 +1361,7 @@ document.addEventListener('DOMContentLoaded', () => {
         boardState.fill(null);
         gameActive = true;
         currentPlayer = 'X';
-        gameCount++; // Increment game count for synchronization
+        gameCount++;
         createBoard();
         updateStatus();
         clearInterval(gameTimer);
@@ -1113,7 +1501,6 @@ document.addEventListener('DOMContentLoaded', () => {
         chatSection.style.display = 'none';
         resetScores();
         
-        // Clean up connections
         cleanupConnection();
         
         if (gameMode !== 'online') {
@@ -1133,6 +1520,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (connectionTimeout) {
             clearTimeout(connectionTimeout);
             connectionTimeout = null;
+        }
+        
+        if (isVoiceActive) {
+            endVoiceCall();
         }
         
         if (conn) {
@@ -1177,8 +1568,62 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             conn = newConn;
-            myRole = 'O'; // المستقبل يكون O
+            myRole = 'O';
             setupConnectionHandlers();
+        });
+        
+        // Handle incoming voice calls
+        peer.on('call', incomingCall => {
+            if (isVoiceActive) {
+                incomingCall.close();
+                return;
+            }
+            
+            call = incomingCall;
+            
+            showModal("الخصم يريد بدء مكالمة صوتية. هل توافق؟", [
+                {
+                    text: "نعم",
+                    class: "success",
+                    action: async () => {
+                        try {
+                            localStream = await navigator.mediaDevices.getUserMedia({ 
+                                audio: {
+                                    echoCancellation: true,
+                                    noiseSuppression: true,
+                                    sampleRate: 44100
+                                } 
+                            });
+                            
+                            setupAudioAnalyzer();
+                            call.answer(localStream);
+                            setupCallHandlers();
+                            
+                            sendNetworkMessage({
+                                type: 'voice_call_accepted',
+                                timestamp: Date.now()
+                            });
+                            
+                        } catch (error) {
+                            console.error('Failed to answer call:', error);
+                            voiceStatus.textContent = 'فشل في الإجابة على المكالمة';
+                            voiceStatus.className = 'voice-status error';
+                        }
+                    }
+                },
+                {
+                    text: "رفض",
+                    class: "secondary",
+                    action: () => {
+                        call.close();
+                        call = null;
+                        sendNetworkMessage({
+                            type: 'voice_call_rejected',
+                            timestamp: Date.now()
+                        });
+                    }
+                }
+            ]);
         });
         
         peer.on('error', err => { 
@@ -1194,7 +1639,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function connectToPeer() {
         let remoteId = remotePeerIdInput.value.trim();
         
-        // Extract ID from invite link
         try { 
             const url = new URL(remoteId); 
             remoteId = url.searchParams.get('join'); 
@@ -1215,10 +1659,9 @@ document.addEventListener('DOMContentLoaded', () => {
             serialization: 'json'
         });
         
-        myRole = 'X'; // المتصل يكون X
+        myRole = 'X';
         setupConnectionHandlers();
         
-        // Connection timeout
         connectionTimeout = setTimeout(() => {
             if (!isConnected) {
                 updateConnectionStatus('error', 'فشل الاتصال - انتهت المهلة');
@@ -1237,7 +1680,6 @@ document.addEventListener('DOMContentLoaded', () => {
             gameCount = 0;
             startGame();
             
-            // Send handshake
             sendNetworkMessage({
                 type: 'handshake',
                 role: myRole,
@@ -1284,7 +1726,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
                 
             case 'move':
-                // Enhanced move validation
                 if (msg.gameCount !== undefined && msg.gameCount !== gameCount) {
                     console.log('Game count mismatch, ignoring move');
                     return;
@@ -1293,7 +1734,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (msg.player && msg.index !== undefined && gameActive) {
                     makeMove(msg.index, msg.player);
                     if (gameActive) {
-                        // Set next player correctly
                         currentPlayer = msg.player === 'X' ? 'O' : 'X';
                         updateStatus();
                         updateBoardVisuals();
@@ -1334,6 +1774,52 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'chat':
                 if (msg.message) {
                     addChatMessage(msg.message, 'opponent');
+                }
+                break;
+                
+            case 'voice_call_request':
+                voiceStatus.textContent = 'طلب مكالمة صوتية واردة...';
+                voiceStatus.className = 'voice-status connecting';
+                break;
+                
+            case 'voice_call_accepted':
+                if (localStream && peer) {
+                    call = peer.call(conn.peer, localStream);
+                    setupCallHandlers();
+                    playSound('voiceStart');
+                }
+                break;
+                
+            case 'voice_call_rejected':
+                voiceStatus.textContent = 'رفض الخصم المكالمة الصوتية';
+                voiceStatus.className = 'voice-status error';
+                
+                if (localStream) {
+                    localStream.getTracks().forEach(track => track.stop());
+                    localStream = null;
+                }
+                
+                setTimeout(() => {
+                    voiceStatus.textContent = 'جاهز للمكالمة الصوتية';
+                    voiceStatus.className = 'voice-status';
+                }, 3000);
+                break;
+                
+            case 'voice_call_ended':
+                if (isVoiceActive) {
+                    endVoiceCall();
+                }
+                break;
+                
+            case 'voice_mute_status':
+                if (msg.isMuted !== undefined) {
+                    const statusText = msg.isMuted ? 
+                        'المكالمة نشطة (الخصم مكتوم)' : 
+                        'المكالمة نشطة';
+                    
+                    if (voiceStatus.className.includes('active')) {
+                        voiceStatus.textContent = statusText;
+                    }
                 }
                 break;
         }
@@ -1436,6 +1922,22 @@ document.addEventListener('DOMContentLoaded', () => {
         ]);
     });
     
+    // Voice chat event listeners
+    startVoiceBtn.addEventListener('click', () => {
+        playSound('click');
+        startVoiceCall();
+    });
+    
+    muteBtn.addEventListener('click', () => {
+        playSound('click');
+        toggleMute();
+    });
+    
+    endVoiceBtn.addEventListener('click', () => {
+        playSound('click');
+        endVoiceCall();
+    });
+    
     chatForm.addEventListener('submit', e => {
         e.preventDefault();
         const message = chatInput.value.trim();
@@ -1452,7 +1954,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Close modal when clicking outside
     modalOverlay.addEventListener('click', (e) => {
         if (e.target === modalOverlay) {
             modalOverlay.style.display = 'none';
@@ -1469,7 +1970,6 @@ document.addEventListener('DOMContentLoaded', () => {
         showTemporaryStatus("تم العثور على دعوة! اضغط 'اتصال بالخصم' للانضمام.", 4000, 'info');
     }
     
-    // Load saved scores
     const savedScores = localStorage.getItem('xoScores');
     if (savedScores) {
         try {
@@ -1482,7 +1982,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     handleGameModeChange();
     
-    // Cleanup on page unload
     window.addEventListener('beforeunload', cleanupConnection);
 });
 </script>
